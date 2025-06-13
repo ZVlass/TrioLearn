@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 pandas
 numpy
 scikit-learn
@@ -9,3 +10,16 @@ networkx
 matplotlib
 python-dotenv
 jupyterlab
+=======
+pandas
+numpy
+scikit-learn
+gensim
+torch
+torch-geometric
+transformers
+networkx
+matplotlib
+python-dotenv
+jupyterlab
+>>>>>>> da0ace75dbdbcf9d408e921365d221a43b7f20a2
