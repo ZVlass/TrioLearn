@@ -1,0 +1,11 @@
+pandas
+numpy
+scikit-learn
+gensim
+torch
+torch-geometric
+transformers
+networkx
+matplotlib
+python-dotenv
+jupyterlab

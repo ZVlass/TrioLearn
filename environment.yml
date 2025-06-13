@@ -1,0 +1,21 @@
+name: triolearn
+channels:
+  - defaults
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pandas
+  - numpy
+  - scikit-learn
+  - gensim
+  - pytorch
+  - torchvision
+  - cpuonly  
+  - pyg       
+  - transformers
+  - networkx
+  - matplotlib
+  - python-dotenv
+  - jupyterlab
+
