@@ -39,9 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'users',
-    'courses',
-    'recommender',
+    "apps.users.apps.UsersConfig",
+    "apps.courses.apps.CoursesConfig",
+    "apps.recommender.apps.RecommenderConfig",
     'rest_framework',
 
 ]
@@ -130,5 +130,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # settings.py
 
-AUTH_USER_MODEL = 'myapp.CustomUser'
+AUTH_USER_MODEL = "users.CustomUser"
 
