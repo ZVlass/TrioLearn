@@ -1,6 +1,4 @@
-"""
-User clustering and profile embedding.
-"""
+
 
 import numpy as np
 import pandas as pd
