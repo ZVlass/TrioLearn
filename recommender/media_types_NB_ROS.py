@@ -5,7 +5,7 @@ from sklearn.metrics import classification_report, accuracy_score
 from imblearn.over_sampling import RandomOverSampler
 
 # 1. Load data
-df = pd.read_csv('./data/processed/oulad_media_profiles_refined.csv')
+df = pd.read_csv('./data/processed/oulad_media_profiles_refined_balanced.csv')
 
 # 2. Compute proportions & derive top_bucket
 count_cols = ['course_count', 'reading_count', 'video_count']
