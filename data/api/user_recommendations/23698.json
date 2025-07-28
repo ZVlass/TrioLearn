@@ -1,0 +1,52 @@
+[
+  {
+    "course_id": "course_594",
+    "title": "Learning How to Learn: Powerful mental tools to help you master tough subjects",
+    "predicted_rating": 4.975
+  },
+  {
+    "course_id": "course_364",
+    "title": "Tidyverse Skills for Data Science in R",
+    "predicted_rating": 3.998
+  },
+  {
+    "course_id": "course_344",
+    "title": "Teaching with Art: Using Inquiry, Activities, and Themes",
+    "predicted_rating": 3.998
+  },
+  {
+    "course_id": "course_529",
+    "title": "Preparing for Google Cloud Certification: Cloud Engineer Professional Certificate en Español",
+    "predicted_rating": 3.998
+  },
+  {
+    "course_id": "course_558",
+    "title": "Application of AI, InsurTech, and Real Estate Technology",
+    "predicted_rating": 3.998
+  },
+  {
+    "course_id": "course_418",
+    "title": "Python Packages for Data Science",
+    "predicted_rating": 3.998
+  },
+  {
+    "course_id": "course_43",
+    "title": "Generative AI for Data Scientists",
+    "predicted_rating": 3.998
+  },
+  {
+    "course_id": "course_400",
+    "title": "R Programming",
+    "predicted_rating": 3.998
+  },
+  {
+    "course_id": "course_547",
+    "title": "How Software Ate Finance",
+    "predicted_rating": 3.997
+  },
+  {
+    "course_id": "course_504",
+    "title": "Getting Started With Application Development",
+    "predicted_rating": 3.997
+  }
+]

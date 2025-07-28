@@ -1,0 +1,52 @@
+[
+  {
+    "course_id": "course_594",
+    "title": "Learning How to Learn: Powerful mental tools to help you master tough subjects",
+    "predicted_rating": 4.986
+  },
+  {
+    "course_id": "course_353",
+    "title": "Data Science Fundamentals",
+    "predicted_rating": 4.007
+  },
+  {
+    "course_id": "course_530",
+    "title": "TensorFlow on Google Cloud",
+    "predicted_rating": 4.007
+  },
+  {
+    "course_id": "course_535",
+    "title": "On Premises Capacity Upgrade and Monitoring with Google Cloud's Apigee API Platform",
+    "predicted_rating": 4.007
+  },
+  {
+    "course_id": "course_378",
+    "title": "Research Data Management and Sharing",
+    "predicted_rating": 4.007
+  },
+  {
+    "course_id": "course_586",
+    "title": "L'investissement à impact, la finance qui change le monde",
+    "predicted_rating": 4.007
+  },
+  {
+    "course_id": "course_532",
+    "title": "Preparing for Your Associate Cloud Engineer Journey en Español",
+    "predicted_rating": 4.006
+  },
+  {
+    "course_id": "course_326",
+    "title": "Gender Analytics: Gender Equity through Inclusive Design",
+    "predicted_rating": 4.006
+  },
+  {
+    "course_id": "course_395",
+    "title": "Introduction to Clinical Data Science",
+    "predicted_rating": 4.006
+  },
+  {
+    "course_id": "course_33",
+    "title": "Business Intelligence (BI) Analyst",
+    "predicted_rating": 4.006
+  }
+]
