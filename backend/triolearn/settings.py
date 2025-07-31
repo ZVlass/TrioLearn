@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "apps.courses.apps.CoursesConfig",
     "apps.recommender.apps.RecommenderConfig",
     'rest_framework',
+    'apps.core',
 
 ]
 
