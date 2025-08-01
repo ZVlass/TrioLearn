@@ -1,4 +1,8 @@
 from django.db import models
+
+# Create your models here.
+
+from django.db import models
 from django.contrib.auth.models import User
 
 DIFFICULTY_LEVELS = [
@@ -73,7 +77,6 @@ class Video(models.Model):
     def __str__(self):
         return self.title
 
-
 class Interaction(models.Model):
     learner = models.ForeignKey(LearnerProfile, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.SET_NULL, null=True, blank=True)
@@ -94,4 +97,3 @@ class Interaction(models.Model):
 
     def __str__(self):
         return f"{self.learner.user.username} {self.event_type} at {self.timestamp}"
-

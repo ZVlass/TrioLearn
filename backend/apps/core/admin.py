@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from .models import LearnerProfile, Course, Book, Video, Interaction
 
 @admin.register(LearnerProfile)
@@ -39,7 +40,9 @@ class VideoAdmin(admin.ModelAdmin):
 @admin.register(Interaction)
 class InteractionAdmin(admin.ModelAdmin):
     list_display = (
-        'learner', 'event_type', 'course', 'book', 'video', 'liked', 'rating', 'timestamp'
+        'learner', 'event_type', 'course', 'book', 'video', 'rating', 'timestamp'
     )
     search_fields = ('learner__user__username',)
-    list_filter = ('event_type', 'liked', 'timestamp')
+    list_filter = ('event_type', 'timestamp')
+
+    

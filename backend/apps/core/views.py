@@ -31,3 +31,4 @@ class LearnerProfileViewSet(viewsets.ReadOnlyModelViewSet):
 class InteractionViewSet(viewsets.ModelViewSet):
     queryset = Interaction.objects.all()
     serializer_class = InteractionSerializer
+

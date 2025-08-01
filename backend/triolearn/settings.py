@@ -12,8 +12,6 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 
-
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -22,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-g_%h(csxg=^)ow=@b2rbh&dx8sxhmk(ahh2il3#cnd_y=tfkue'
+SECRET_KEY = 'django-insecure-kl-zogdkg64!03(+cd_fq3_ynk!s6$zc6-lf4hsim+rc^8l9_c'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -39,12 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    "apps.users.apps.UsersConfig",
-    "apps.courses.apps.CoursesConfig",
-    "apps.recommender.apps.RecommenderConfig",
-    'rest_framework',
     'apps.core',
-
+    'apps.recommender',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -82,10 +77,15 @@ WSGI_APPLICATION = 'triolearn.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'triolearn_db',
+        'USER': 'triolearn_user',
+        'PASSWORD': 'triolearn_pass',
+        'HOST': 'localhost',
+        'PORT': '3306',
     }
 }
+
 
 
 # Password validation
@@ -128,8 +128,3 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# settings.py
-
-AUTH_USER_MODEL = "users.CustomUser"
-

@@ -1,4 +1,3 @@
-
 from rest_framework import serializers
 from .models import LearnerProfile, Course, Book, Video, Interaction
 from django.contrib.auth.models import User
@@ -57,7 +56,3 @@ class InteractionSerializer(serializers.ModelSerializer):
             'id', 'learner', 'course', 'book', 'video',
             'rating', 'liked', 'event_type', 'timestamp'
         ]
-
-
-
-
