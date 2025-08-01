@@ -30,7 +30,7 @@ class LearnerProfile(models.Model):
 class Course(models.Model):
     title = models.CharField(max_length=300)
     ratings = models.FloatField(null=True, blank=True)
-    rating_level = models.CharField(max_length=20, blank=True)
+    rating_level = models.CharField(max_length=20, blank=True, null=True)
     difficulty_num = models.FloatField(null=True, blank=True)
     students_enrolled = models.IntegerField(null=True, blank=True)
     popularity = models.FloatField(null=True, blank=True)
