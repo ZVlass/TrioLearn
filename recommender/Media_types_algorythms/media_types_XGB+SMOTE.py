@@ -48,7 +48,7 @@ param_dist = {
     'xgb__colsample_bytree': uniform(0.8, 0.2)
 }
 
-# --------------------- Randomized Search --------------------- #
+# Randomized Search 
 search = RandomizedSearchCV(
     pipeline,
     param_distributions=param_dist,

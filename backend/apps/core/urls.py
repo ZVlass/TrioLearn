@@ -4,6 +4,7 @@ from .views import (
     CourseViewSet, BookViewSet, VideoViewSet,
     LearnerProfileViewSet, InteractionViewSet
 )
+from . import views
 
 router = DefaultRouter()
 router.register(r'courses', CourseViewSet)
@@ -14,4 +15,8 @@ router.register(r'interactions', InteractionViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('register/', views.register_user, name='register'),
+    path('login/', views.login_user, name='login'), 
+    path('logout/', views.logout_user, name='logout'),
+    path('dashboard/', views.dashboard, name='dashboard'),
 ]

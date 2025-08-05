@@ -16,7 +16,6 @@ class LearnerProfile(models.Model):
     gender = models.CharField(max_length=10, blank=True)
     region = models.CharField(max_length=100, blank=True)
     highest_education = models.CharField(max_length=100, blank=True)
-    imd_band = models.CharField(max_length=20, blank=True)
     age_band = models.CharField(max_length=20, blank=True)
     avg_session_duration_min = models.FloatField(null=True, blank=True)
     course_prop = models.FloatField(null=True, blank=True)
