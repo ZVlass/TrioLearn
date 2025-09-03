@@ -2,5 +2,24 @@
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
+
     <button type="submit">Register</button>
 </form>
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const checkboxes = document.querySelectorAll("input[name='topic_interests']");
+    checkboxes.forEach(cb => cb.addEventListener('change', function () {
+        const checked = document.querySelectorAll("input[name='topic_interests']:checked");
+        if (checked.length >= 3) {
+            checkboxes.forEach(c => {
+                if (!c.checked) c.disabled = true;
+            });
+        } else {
+            checkboxes.forEach(c => c.disabled = false);
+        }
+    }));
+});
+</script>

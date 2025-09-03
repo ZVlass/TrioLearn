@@ -1,21 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>TrioLearn</title>
-</head>
-<body>
-    <header>
-        <h1> TrioLearn Dashboard</h1>
-        <hr>
-    </header>
-
-    {% block content %}
-    {% endblock %}
-
-    <footer>
-        <hr>
-        <p>© 2025 TrioLearn</p>
-    </footer>
-</body>
-</html>
+{% if user.is_authenticated %}
+    <p>Welcome, {{ user.username }} | <a href="{% url 'logout' %}">Logout</a></p>
+{% else %}
+    <a href="{% url 'login' %}">Login</a> | <a href="{% url 'register' %}">Register</a>
+{% endif %}

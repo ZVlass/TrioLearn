@@ -13,8 +13,32 @@
     <li>Average Session Duration: {{ profile.avg_session_duration_min|floatformat:2 }} minutes</li>
   </ul>
 
-  <h3>📚 Recommendations Coming Soon...</h3>
-  <p>We will suggest courses, books, and videos based on your profile and interests.</p>
+  <h3>Recommended Courses</h3>
+    <ul>
+    {% for course in courses %}
+    <li><a href="{{ course.url }}">{{ course.title }}</a></li>
+    {% empty %}
+    <li>No matching courses yet.</li>
+    {% endfor %}
+    </ul>
+
+    <h3>Recommended Books</h3>
+    <ul>
+    {% for book in books %}
+    <li><a href="{{ book.info_link }}">{{ book.title }}</a></li>
+    {% empty %}
+    <li>No matching books yet.</li>
+    {% endfor %}
+    </ul>
+
+    <h3>Recommended Videos</h3>
+    <ul>
+    {% for video in videos %}
+    <li><a href="{{ video.url }}">{{ video.title }}</a></li>
+    {% empty %}
+    <li>No matching videos yet.</li>
+    {% endfor %}
+    </ul>
 
   <p><a href="{% url 'logout' %}">Logout</a></p>
 {% endblock %}

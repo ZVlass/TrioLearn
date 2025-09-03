@@ -18,10 +18,20 @@ class LearnerProfile(models.Model):
     highest_education = models.CharField(max_length=100, blank=True)
     age_band = models.CharField(max_length=20, blank=True)
     avg_session_duration_min = models.FloatField(null=True, blank=True)
+
+    topic_interests = models.JSONField(null=True, blank=True)
+    preferred_format = models.CharField(max_length=20, blank=True)
+
     course_prop = models.FloatField(null=True, blank=True)
     reading_prop = models.FloatField(null=True, blank=True)
     video_prop = models.FloatField(null=True, blank=True)
     last_active = models.DateTimeField(auto_now=True)
+
+    def matches_item(self, item_topics):
+        if not self.topic_interests or not item_topics:
+            return False
+        top_tags = sorted(item_topics.items(), key=lambda x: x[1], reverse=True)[:3]
+        return any(tag for tag, _ in top_tags if tag in self.topic_interests)
 
     def __str__(self):
         return self.user.username
@@ -56,6 +66,10 @@ class Book(models.Model):
     preview_link = models.URLField(blank=True)
     info_link = models.URLField(blank=True)
     topic_vector = models.JSONField(blank=True, null=True)
+
+    gbooks_id = models.CharField(max_length=64, unique=True, null=True, blank=True)
+    isbn_13 = models.CharField(max_length=13, unique=True, null=True, blank=True)
+    thumbnail = models.URLField(blank=True)
 
     def __str__(self):
         return self.title
@@ -93,6 +107,11 @@ class Interaction(models.Model):
     ])
     rating = models.FloatField(null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def item(self):
+        return self.course or self.book or self.video
+
 
     def __str__(self):
         return f"{self.learner.user.username} {self.event_type} at {self.timestamp}"

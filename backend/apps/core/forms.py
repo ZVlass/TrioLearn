@@ -40,6 +40,23 @@ AGE_BAND_CHOICES = [
     ('55<=', '55+'),
 ]
 
+TOPIC_CHOICES = [
+    ('ai', 'AI / Machine Learning'),
+    ('programming', 'Programming'),
+    ('finance', 'Business / Finance'),
+    ('medicine', 'Health & Medicine'),
+    ('arts', 'Arts & Humanities'),
+    ('datasci', 'Data Science'),
+    ('languages', 'Language Learning'),
+]
+
+FORMAT_CHOICES = [
+    ('video', 'Watching videos'),
+    ('course', 'Interactive courses'),
+    ('reading', 'Reading books/articles'),
+    ('none', 'No preference'),
+]
+
 class UserRegistrationForm(forms.Form):
     username = forms.CharField(max_length=150)
     email = forms.EmailField()
@@ -51,8 +68,25 @@ class UserRegistrationForm(forms.Form):
     age_band = forms.ChoiceField(choices=AGE_BAND_CHOICES)
     
 
+    topic_interests = forms.MultipleChoiceField(
+        choices=TOPIC_CHOICES,
+        widget=forms.CheckboxSelectMultiple,
+        required=True
+    )
+    preferred_format = forms.ChoiceField(
+        choices=FORMAT_CHOICES,
+        widget=forms.RadioSelect,
+        required=True
+    )
+
     def clean_email(self):
         email = self.cleaned_data['email']
         if User.objects.filter(email=email).exists():
             raise ValidationError("Email already in use.")
         return email
+    
+    def clean_topic_interests(self):
+        topics = self.cleaned_data['topic_interests']
+        if len(topics) > 3:
+            raise ValidationError("Please select up to 3 topics only.")
+        return topics

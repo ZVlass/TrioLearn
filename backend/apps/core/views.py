@@ -49,22 +49,29 @@ def register_user(request):
                 password=form.cleaned_data['password']
             )
 
+            preferred = form.cleaned_data['preferred_format']
+            # Initialize prop weights based on preferred format
+            props = {'video': 0.6, 'reading': 0.6, 'course': 0.6}
+            course_prop = props['course'] if preferred == 'course' else 0.2
+            reading_prop = props['reading'] if preferred == 'reading' else 0.2
+            video_prop = props['video'] if preferred == 'video' else 0.2
+
             profile = LearnerProfile.objects.create(
                 user=user,
                 gender=form.cleaned_data['gender'],
                 region=form.cleaned_data['region'],
                 highest_education=form.cleaned_data['highest_education'],
-                imd_band=form.cleaned_data['imd_band'],
                 age_band=form.cleaned_data['age_band'],
-                avg_session_duration_min=form.cleaned_data.get('avg_session_duration_min', None),
-                course_prop=0.0,
-                reading_prop=0.0,
-                video_prop=0.0,
+                topic_interests=form.cleaned_data['topic_interests'],
+                preferred_format=preferred,
+                course_prop=course_prop,
+                reading_prop=reading_prop,
+                video_prop=video_prop
             )
 
             login(request, user)
             messages.success(request, "Welcome to TrioLearn!")
-            return redirect('dashboard')  # Replace with actual view name
+            return redirect('dashboard')
     else:
         form = UserRegistrationForm()
 
@@ -92,4 +99,26 @@ def logout_user(request):
 @login_required
 def dashboard(request):
     profile = LearnerProfile.objects.get(user=request.user)
-    return render(request, 'core/dashboard.html', {'profile': profile})
+
+    # Filter recommendations by topic match
+    courses = [
+        c for c in Course.objects.all()
+        if profile.matches_item(c.topic_vector)
+    ]
+
+    books = [
+        b for b in Book.objects.all()
+        if profile.matches_item(b.topic_vector)
+    ]
+
+    videos = [
+        v for v in Video.objects.all()
+        if profile.matches_item(v.topic_vector)
+    ]
+
+    return render(request, 'core/dashboard.html', {
+        'profile': profile,
+        'courses': courses[:5],
+        'books': books[:5],
+        'videos': videos[:5],
+    })
