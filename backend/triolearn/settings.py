@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'apps.core',
     'apps.recommender',
     'rest_framework',
+    'pgvector.django',
 ]
 
 MIDDLEWARE = [
@@ -86,16 +87,20 @@ WSGI_APPLICATION = 'triolearn.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'triolearn_db',
-        'USER': 'triolearn_user',
-        'PASSWORD': 'triolearn_pass',
-        'HOST': 'localhost',
-        'PORT': '3306',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "triolearn_db",
+        "USER": "triolearn_user",
+        "PASSWORD": "triolearn_pass",
+        "HOST": "localhost",
+        "PORT": "5432",
+        "OPTIONS": {
+            "options": "-c search_path=public"
+        },
     }
 }
 
+DATABASES["default"]["OPTIONS"] = {"options": "-c search_path=trio,public"}
 
 
 # Password validation

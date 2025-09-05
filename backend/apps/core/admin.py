@@ -1,5 +1,6 @@
 from django.contrib import admin
-
+from django.db.models import Count
+from .models_vectors import VectorizationRun, TopicVector
 from .models import LearnerProfile, Course, Book, Video, Interaction
 
 @admin.register(LearnerProfile)
@@ -44,5 +45,74 @@ class InteractionAdmin(admin.ModelAdmin):
     )
     search_fields = ('learner__user__username',)
     list_filter = ('event_type', 'timestamp')
+
+
+
+# ---------- VectorizationRun ----------
+@admin.register(VectorizationRun)
+class VectorizationRunAdmin(admin.ModelAdmin):
+    list_display = (
+        "version_tag",
+        "model_name",
+        "vector_kind",
+        "dim",
+        "created_at",
+        "vectors_count",
+    )
+    list_filter = ("vector_kind", "model_name", "dim", "created_at")
+    search_fields = ("version_tag", "model_name")
+    ordering = ("-created_at",)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        # annotate how many TopicVectors belong to each run
+        return qs.annotate(_vectors_count=Count("vectors"))
+
+    @admin.display(description="Vectors", ordering="_vectors_count")
+    def vectors_count(self, obj):
+        return obj._vectors_count
+
+
+# ---------- TopicVector ----------
+@admin.register(TopicVector)
+class TopicVectorAdmin(admin.ModelAdmin):
+    # Keep list rows light—don’t render the whole vector
+    list_display = (
+        "modality",
+        "external_id",
+        "run",
+        "model_name",
+        "vector_kind",
+        "dim",
+        "created_at",
+        "updated_at",
+        "preview_dims",
+    )
+    list_filter = (
+        "modality",
+        "vector_kind",
+        "model_name",
+        ("run", admin.RelatedOnlyFieldListFilter),
+        ("created_at", admin.DateFieldListFilter),
+    )
+    search_fields = (
+        "external_id",
+        "model_name",
+        "run__version_tag",
+    )
+    autocomplete_fields = ("run",)
+    list_select_related = ("run",)
+    ordering = ("-created_at",)
+    readonly_fields = ("dim", "created_at", "updated_at")
+
+    @admin.display(description="vector[:5]")
+    def preview_dims(self, obj):
+        try:
+            # obj.vector behaves like a Python list; show the first few elements
+            head = list(obj.vector[:5])
+            # compact string, e.g. [0.12, -0.03, ...]
+            return "[" + ", ".join(f"{x:.2f}" for x in head) + "]"
+        except Exception:
+            return "—"
 
     
