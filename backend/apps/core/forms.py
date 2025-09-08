@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from .models import LearnerProfile
+from apps.core.constants import TOPIC_CHOICES
 
 GENDER_CHOICES = [('M', 'Male'), ('F', 'Female'), ('O', 'Other')]
 REGION_CHOICES = [
@@ -28,12 +28,6 @@ EDUCATION_CHOICES = [
     ('HE Qualification', 'HE Qualification'),
     ('Post Graduate Qualification', 'Post Graduate Qualification'),
 ]
-IMD_BAND_CHOICES = [
-    ('0-10%', '0-10%'), ('10-20%', '10-20%'), ('20-30%', '20-30%'),
-    ('30-40%', '30-40%'), ('40-50%', '40-50%'), ('50-60%', '50-60%'),
-    ('60-70%', '60-70%'), ('70-80%', '70-80%'), ('80-90%', '80-90%'),
-    ('90-100%', '90-100%')
-]
 AGE_BAND_CHOICES = [
     ('0-35', '0-35'),
     ('35-55', '35-55'),
@@ -41,13 +35,14 @@ AGE_BAND_CHOICES = [
 ]
 
 TOPIC_CHOICES = [
-    ('ai', 'AI / Machine Learning'),
-    ('programming', 'Programming'),
-    ('finance', 'Business / Finance'),
-    ('medicine', 'Health & Medicine'),
-    ('arts', 'Arts & Humanities'),
-    ('datasci', 'Data Science'),
-    ('languages', 'Language Learning'),
+    ("ai", "Artificial Intelligence"),
+    ("ml", "Machine Learning"),
+    ("ds", "Data Science"),
+    ("db", "Databases"),
+    ("web", "Web Development"),
+    ("nlp", "Natural Language Processing"),
+    ("cv", "Computer Vision"),
+    ("cloud", "Cloud/DevOps"),
 ]
 
 FORMAT_CHOICES = [
@@ -66,17 +61,21 @@ class UserRegistrationForm(forms.Form):
     region = forms.ChoiceField(choices=REGION_CHOICES)
     highest_education = forms.ChoiceField(choices=EDUCATION_CHOICES)
     age_band = forms.ChoiceField(choices=AGE_BAND_CHOICES)
-    
 
+    # Make topics optional; still enforce <= 3
     topic_interests = forms.MultipleChoiceField(
         choices=TOPIC_CHOICES,
         widget=forms.CheckboxSelectMultiple,
-        required=True
+        required=False,
+        label="Topic interests (choose up to 3)"
     )
+
     preferred_format = forms.ChoiceField(
         choices=FORMAT_CHOICES,
+        required=False,
+        initial="none",
         widget=forms.RadioSelect,
-        required=True
+        help_text="Prefer a format? You can skip — our recommendations adapt automatically."
     )
 
     def clean_email(self):
@@ -84,9 +83,24 @@ class UserRegistrationForm(forms.Form):
         if User.objects.filter(email=email).exists():
             raise ValidationError("Email already in use.")
         return email
-    
+
     def clean_topic_interests(self):
-        topics = self.cleaned_data['topic_interests']
+        topics = self.cleaned_data.get('topic_interests', [])
         if len(topics) > 3:
             raise ValidationError("Please select up to 3 topics only.")
         return topics
+
+
+class TopicSelectionForm(forms.Form):
+    topic_interests = forms.MultipleChoiceField(
+        choices=TOPIC_CHOICES,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="Choose up to 3 topics"
+    )
+
+    def clean_topic_interests(self):
+        vals = self.cleaned_data.get("topic_interests", [])
+        if len(vals) > 3:
+            raise forms.ValidationError("Please select no more than 3 topics.")
+        return vals

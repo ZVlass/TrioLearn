@@ -1,25 +1,89 @@
-<h2>Register for TrioLearn</h2>
-<form method="post">
+{% extends "core/base.html" %}
+
+{% block content %}
+<div class="container auth-box">
+  <h2>Create your TrioLearn account</h2>
+
+  <form method="post">
     {% csrf_token %}
-    {{ form.as_p }}
 
-    <button type="submit">Register</button>
-</form>
+    {% if form.non_field_errors %}
+      <div class="alert">{{ form.non_field_errors }}</div>
+    {% endif %}
 
+    <fieldset>
+      <legend>Account</legend>
+      <label for="{{ form.username.id_for_label }}">Username</label>
+      {{ form.username|add_class:"input" }}
 
+      <label for="{{ form.email.id_for_label }}">Email</label>
+      {{ form.email|add_class:"input" }}
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const checkboxes = document.querySelectorAll("input[name='topic_interests']");
-    checkboxes.forEach(cb => cb.addEventListener('change', function () {
-        const checked = document.querySelectorAll("input[name='topic_interests']:checked");
-        if (checked.length >= 3) {
-            checkboxes.forEach(c => {
-                if (!c.checked) c.disabled = true;
-            });
-        } else {
-            checkboxes.forEach(c => c.disabled = false);
-        }
-    }));
-});
-</script>
+      <label for="{{ form.password.id_for_label }}">Password</label>
+      {{ form.password|add_class:"input" }}
+    </fieldset>
+
+    <fieldset>
+      <legend>About you</legend>
+      <div class="form-row">
+        <div>
+          <label for="{{ form.gender.id_for_label }}">Gender</label>
+          {{ form.gender|add_class:"input" }}
+        </div>
+        <div>
+          <label for="{{ form.region.id_for_label }}">Region</label>
+          {{ form.region|add_class:"input" }}
+        </div>
+        <div>
+          <label for="{{ form.highest_education.id_for_label }}">Highest education</label>
+          {{ form.highest_education|add_class:"input" }}
+        </div>
+        <div>
+          <label for="{{ form.age_band.id_for_label }}">Age band</label>
+          {{ form.age_band|add_class:"input" }}
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Topics</legend>
+      <p class="help">Pick up to 3 that excite you (optional).</p>
+      <div class="checkbox-list">
+        {% for cb in form.topic_interests %}
+          <label>{{ cb.tag }} {{ cb.choice_label }}</label>
+        {% endfor %}
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Preferred format</legend>
+      <div class="help"><strong>New:</strong> Our recommender predicts your best learning format from your activity.
+        Prefer a format? <em>You can skip — our recommendations adapt automatically.</em>
+      </div>
+      <div class="radio-list">
+        {% for rb in form.preferred_format %}
+          <label>{{ rb.tag }} {{ rb.choice_label }}</label>
+        {% endfor %}
+      </div>
+    </fieldset>
+
+    <div class="actions">
+      <button class="btn" type="submit">Create account</button>
+      <a class="btn btn-secondary" href="{% url 'login' %}">I already have an account</a>
+    </div>
+    <p class="footer-note">By signing up you agree to our terms and privacy policy.</p>
+  </form>
+
+  <script>
+  // Limit topics to 3 (client-side)
+  (function(){
+    const boxes=[...document.querySelectorAll("input[name='topic_interests']")];
+    function sync(){
+      const checked=boxes.filter(x=>x.checked);
+      boxes.forEach(cb=>cb.disabled=!cb.checked && checked.length>=3);
+    }
+    boxes.forEach(cb=>cb.addEventListener('change',sync)); sync();
+  })();
+  </script>
+</div>
+{% endblock %}
