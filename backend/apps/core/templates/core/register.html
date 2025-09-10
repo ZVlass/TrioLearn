@@ -13,14 +13,26 @@
 
     <fieldset>
       <legend>Account</legend>
+
+      <label for="{{ form.first_name.id_for_label }}">First name</label>
+      {{ form.first_name }}
+      {{ form.first_name.errors }}
+
+      <label for="{{ form.last_name.id_for_label }}">Last name</label>
+      {{ form.last_name }}
+      {{ form.last_name.errors }}
+
       <label for="{{ form.username.id_for_label }}">Username</label>
-      {{ form.username|add_class:"input" }}
+      {{ form.username }}
+      {{ form.username.errors }}
 
       <label for="{{ form.email.id_for_label }}">Email</label>
-      {{ form.email|add_class:"input" }}
+      {{ form.email }}
+      {{ form.email.errors }}
 
       <label for="{{ form.password.id_for_label }}">Password</label>
-      {{ form.password|add_class:"input" }}
+      {{ form.password }}
+      {{ form.password.errors }}
     </fieldset>
 
     <fieldset>
@@ -28,19 +40,23 @@
       <div class="form-row">
         <div>
           <label for="{{ form.gender.id_for_label }}">Gender</label>
-          {{ form.gender|add_class:"input" }}
+          {{ form.gender }}
+          {{ form.gender.errors }}
         </div>
         <div>
           <label for="{{ form.region.id_for_label }}">Region</label>
-          {{ form.region|add_class:"input" }}
+          {{ form.region }}
+          {{ form.region.errors }}
         </div>
         <div>
           <label for="{{ form.highest_education.id_for_label }}">Highest education</label>
-          {{ form.highest_education|add_class:"input" }}
+          {{ form.highest_education }}
+          {{ form.highest_education.errors }}
         </div>
         <div>
           <label for="{{ form.age_band.id_for_label }}">Age band</label>
-          {{ form.age_band|add_class:"input" }}
+          {{ form.age_band }}
+          {{ form.age_band.errors }}
         </div>
       </div>
     </fieldset>
@@ -48,23 +64,17 @@
     <fieldset>
       <legend>Topics</legend>
       <p class="help">Pick up to 3 that excite you (optional).</p>
-      <div class="checkbox-list">
-        {% for cb in form.topic_interests %}
-          <label>{{ cb.tag }} {{ cb.choice_label }}</label>
-        {% endfor %}
-      </div>
+      {{ form.topic_interests }}
+      {{ form.topic_interests.errors }}
     </fieldset>
 
     <fieldset>
       <legend>Preferred format</legend>
-      <div class="help"><strong>New:</strong> Our recommender predicts your best learning format from your activity.
-        Prefer a format? <em>You can skip — our recommendations adapt automatically.</em>
+      <div class="help">
+        {{ form.preferred_format.help_text }}
       </div>
-      <div class="radio-list">
-        {% for rb in form.preferred_format %}
-          <label>{{ rb.tag }} {{ rb.choice_label }}</label>
-        {% endfor %}
-      </div>
+      {{ form.preferred_format }}
+      {{ form.preferred_format.errors }}
     </fieldset>
 
     <div class="actions">
@@ -74,16 +84,17 @@
     <p class="footer-note">By signing up you agree to our terms and privacy policy.</p>
   </form>
 
+  <!-- Optional: small UX helper to cap topics at 3 on the client side -->
   <script>
-  // Limit topics to 3 (client-side)
-  (function(){
-    const boxes=[...document.querySelectorAll("input[name='topic_interests']")];
-    function sync(){
-      const checked=boxes.filter(x=>x.checked);
-      boxes.forEach(cb=>cb.disabled=!cb.checked && checked.length>=3);
-    }
-    boxes.forEach(cb=>cb.addEventListener('change',sync)); sync();
-  })();
+    (function(){
+      const boxes = Array.from(document.querySelectorAll("input[name='topic_interests']"));
+      function sync(){
+        const checked = boxes.filter(b => b.checked);
+        boxes.forEach(b => { b.disabled = !b.checked && checked.length >= 3; });
+      }
+      boxes.forEach(b => b.addEventListener('change', sync));
+      sync();
+    })();
   </script>
 </div>
 {% endblock %}

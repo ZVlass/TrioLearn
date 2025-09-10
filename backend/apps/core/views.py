@@ -40,36 +40,50 @@ class InteractionViewSet(viewsets.ModelViewSet):
     queryset = Interaction.objects.all()
     serializer_class = InteractionSerializer
 
-
-
 def register_user(request):
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
+            data = form.cleaned_data  
+
+            # Create the user
             user = User.objects.create_user(
-                username=form.cleaned_data['username'],
-                email=form.cleaned_data['email'],
-                password=form.cleaned_data['password']
+                username=data['username'],
+                email=data['email'],
+                password=data['password'],
             )
+            # Save first/last name (optional fields)
+            user.first_name = (data.get('first_name') or '').strip()
+            user.last_name  = (data.get('last_name') or '').strip()
+            user.save()
 
-            preferred = form.cleaned_data['preferred_format']
-            # Initialize prop weights based on preferred format
-            props = {'video': 0.6, 'reading': 0.6, 'course': 0.6}
-            course_prop = props['course'] if preferred == 'course' else 0.2
-            reading_prop = props['reading'] if preferred == 'reading' else 0.2
-            video_prop = props['video'] if preferred == 'video' else 0.2
+            # Preferred format (may be empty/None)
+            preferred = (data.get('preferred_format') or 'none').strip().lower()
 
+            # Soft-prior init for modality props
+            if preferred in ('course', 'reading', 'video'):
+                course_prop  = 0.6 if preferred == 'course'  else 0.2
+                reading_prop = 0.6 if preferred == 'reading' else 0.2
+                video_prop   = 0.6 if preferred == 'video'   else 0.2
+                prior_weight = 0.3   # let model blend/decay this
+            else:
+                # "No preference": keep neutral start and no prior bias
+                course_prop = reading_prop = video_prop = 0.2
+                prior_weight = 0.0
+
+            # Create profile
             profile = LearnerProfile.objects.create(
                 user=user,
-                gender=form.cleaned_data['gender'],
-                region=form.cleaned_data['region'],
-                highest_education=form.cleaned_data['highest_education'],
-                age_band=form.cleaned_data['age_band'],
-                topic_interests=form.cleaned_data['topic_interests'],
+                gender=data['gender'],
+                region=data['region'],
+                highest_education=data['highest_education'],
+                age_band=data['age_band'],
+                topic_interests=data.get('topic_interests', []),
                 preferred_format=preferred,
                 course_prop=course_prop,
                 reading_prop=reading_prop,
-                video_prop=video_prop
+                video_prop=video_prop,
+                format_prior_weight=prior_weight,  # if you added this field
             )
 
             login(request, user)

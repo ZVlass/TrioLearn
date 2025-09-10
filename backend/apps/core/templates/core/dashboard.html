@@ -1,7 +1,8 @@
 {% extends 'core/base.html' %}
 
 {% block content %}
-  <h2>Welcome, {{ user.username }}!</h2>
+  <h2>Welcome, {{ user.get_full_name|default:user.username }}!</h2>
+
 
   <!-- Prediction emphasis banner -->
   <div style="padding:.75rem 1rem; margin:.5rem 0 1rem; border:1px solid #ddd; border-radius:.5rem;">
@@ -109,15 +110,6 @@
     </div>
   {% endif %}
 
-  <div class="rec-section rec--explore">
-    <h3>Explore More</h3>
-    <ul>
-      {% for x in explore_items %}
-        <li><a href="{{ x.url }}" class="rec-item" data-item-type="{{ x.type }}" data-item-id="{{ x.id }}">{{ x.title }}</a></li>
-      {% empty %}<li>No extra suggestions yet.</li>{% endfor %}
-    </ul>
-  </div>
-
   {% if surprise_item %}
     <div class="rec-section rec--surprise">
       <h3>🎁 Surprise Pick</h3>
@@ -130,7 +122,8 @@
 
   <h3>Your Learner Profile:</h3>
   <ul>
-    <li>Gender: {{ gender_label }}</li> {# ← full label #}
+    <li>Name: {{ user.get_full_name|default:user.username }}</li>
+    <li>Gender: {{ gender_label }}</li>  {# you already compute gender_label in the view #}
     <li>Region: {{ profile.region }}</li>
     <li>Highest Education: {{ profile.highest_education }}</li>
     <li>Age Band: {{ profile.age_band }}</li>

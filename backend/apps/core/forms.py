@@ -53,6 +53,10 @@ FORMAT_CHOICES = [
 ]
 
 class UserRegistrationForm(forms.Form):
+
+    first_name = forms.CharField(max_length=150, required=False, label="First name")
+    last_name  = forms.CharField(max_length=150, required=False, label="Last name")
+    
     username = forms.CharField(max_length=150)
     email = forms.EmailField()
     password = forms.CharField(widget=forms.PasswordInput)
