@@ -27,3 +27,4 @@ outputs/
 
 # OS files
 .DS_Store
+/outputs/
