@@ -1,0 +1,15 @@
+{# templates/core/landing.html #}
+{% extends "core/base.html" %}
+
+{% block content %}
+  <h1>Welcome to TrioLearn</h1>
+  <p>Personalised learning paths across courses, books, and videos.</p>
+
+  {% if user.is_authenticated %}
+    <p>You're signed in as <strong>{{ user.username }}</strong>.</p>
+    <p><a href="{% url 'dashboard' %}">Go to your dashboard</a></p>
+  {% else %}
+    <p><a href="{% url 'register' %}">Create your account</a> or <a href="{% url 'login' %}">Log in</a>.</p>
+  {% endif %}
+{% endblock %}
+

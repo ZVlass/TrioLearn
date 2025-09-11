@@ -1,19 +1,28 @@
-<h2>Login to TrioLearn</h2>
-<form method="post">
+{% extends "core/base.html" %}
+
+{% block content %}
+<div class="container auth-box">
+  <h2>Welcome back</h2>
+
+  <form method="post" action="{% url 'login' %}">
     {% csrf_token %}
-    <label>Username:</label>
-    <input type="text" name="username" required><br>
 
-    <label>Password:</label>
-    <input type="password" name="password" required><br>
+    {% if form and form.non_field_errors %}
+      <div class="alert">{{ form.non_field_errors }}</div>
+    {% endif %}
 
-    <button type="submit">Login</button>
-</form>
+    <label for="id_username">Username</label>
+    {% if form and form.username %} {{ form.username|add_class:"input" }}
+    {% else %} <input id="id_username" class="input" type="text" name="username" required> {% endif %}
 
-{% if messages %}
-  <ul>
-    {% for message in messages %}
-      <li>{{ message }}</li>
-    {% endfor %}
-  </ul>
-{% endif %}
+    <label for="id_password">Password</label>
+    {% if form and form.password %} {{ form.password|add_class:"input" }}
+    {% else %} <input id="id_password" class="input" type="password" name="password" required> {% endif %}
+
+    <div class="actions">
+      <button class="btn" type="submit">Log in</button>
+      <a class="btn btn-secondary" href="{% url 'register' %}">Create an account</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,44 +1,147 @@
 {% extends 'core/base.html' %}
 
 {% block content %}
-  <h2>Welcome, {{ user.username }}!</h2>
+  <h2>Welcome, {{ user.get_full_name|default:user.username }}!</h2>
+
+
+  <!-- Prediction emphasis banner -->
+  <div style="padding:.75rem 1rem; margin:.5rem 0 1rem; border:1px solid #ddd; border-radius:.5rem;">
+    {% if profile.preferred_format == 'none' or not profile.preferred_format %}
+      <strong>Smart pick:</strong>
+      We’ll tailor formats automatically. Early signals suggest you might prefer <em>{{ top_format_label }}</em>.
+      We’ll adapt as you interact.
+    {% else %}
+      <strong>Personalisation in action:</strong>
+      You selected <em>{{ profile.preferred_format }}</em>{% if preferred_format_label %} ({{ preferred_format_label }}){% endif %};
+      based on your activity, we’re leaning towards <em>{{ top_format_label }}</em>. Tweak anytime in settings.
+    {% endif %}
+  </div>
+
+  <h3>Your topics</h3>
+  {% if topic_display %}
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin:.25rem 0 1rem;">
+      {% for code, label in topic_display %}
+        <span class="badge">{{ label }}</span>
+      {% endfor %}
+    </div>
+
+    <form method="get" style="margin: .5rem 0 1rem; display:flex; gap:.5rem; align-items:center;">
+      <label for="topic">Focus topic:</label>
+      <select id="topic" name="topic">
+        <option value="" {% if not focus_topic %}selected{% endif %}>All topics</option>
+        {% for code, label in topic_display %}
+          <option value="{{ code }}" {% if focus_topic == code %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn" type="submit">Apply</button>
+      {% if focus_topic %}
+        <a class="btn btn-secondary" href="{% url 'dashboard' %}" style="margin-left:.5rem;">Clear</a>
+      {% endif %}
+    </form>
+  {% else %}
+    <p>No topics selected yet. Update your profile to personalise results.</p>
+  {% endif %}
+
+  {% if focus_label %}
+    <p class="muted" style="margin:.25rem 0 1rem;">Showing results for: <strong>{{ focus_label }}</strong></p>
+  {% endif %}
+
+  {# ---- MAIN MODALITY FIRST (emphasised) ---- #}
+  {% if top_key == 'course' %}
+    <div class="rec-section rec--course primary">
+      <h3>Recommended Courses</h3>
+      <ul>
+        {% for c in courses %}
+          <li><a href="{{ c.url }}" class="rec-item" data-item-type="course" data-item-id="{{ c.id }}">{{ c.title }}</a></li>
+        {% empty %}<li>No course suggestions yet.</li>{% endfor %}
+      </ul>
+    </div>
+  {% elif top_key == 'reading' %}
+    <div class="rec-section rec--reading primary">
+      <h3>Recommended Books</h3>
+      <ul>
+        {% for b in books %}
+          <li><a href="{{ b.info_link }}" class="rec-item" data-item-type="book" data-item-id="{{ b.id }}">{{ b.title }} by {{ b.authors }}</a></li>
+        {% empty %}<li>No book suggestions yet.</li>{% endfor %}
+      </ul>
+    </div>
+  {% else %}
+    <div class="rec-section rec--video primary">
+      <h3>Recommended Videos</h3>
+      <ul>
+        {% for v in videos %}
+          <li><a href="{{ v.url }}" class="rec-item" data-item-type="video" data-item-id="{{ v.id }}">{{ v.title }}</a></li>
+        {% empty %}<li>No video suggestions yet.</li>{% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  {# ---- THEN THE OTHER TWO MODALITIES (standard frames) ---- #}
+  {% if top_key != 'course' %}
+    <div class="rec-section rec--course">
+      <h3>Recommended Courses</h3>
+      <ul>
+        {% for c in courses %}
+          <li><a href="{{ c.url }}" class="rec-item" data-item-type="course" data-item-id="{{ c.id }}">{{ c.title }}</a></li>
+        {% empty %}<li>No course suggestions yet.</li>{% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  {% if top_key != 'reading' %}
+    <div class="rec-section rec--reading">
+      <h3>Recommended Books</h3>
+      <ul>
+        {% for b in books %}
+          <li><a href="{{ b.info_link }}" class="rec-item" data-item-type="book" data-item-id="{{ b.id }}">{{ b.title }} by {{ b.authors }}</a></li>
+        {% empty %}<li>No book suggestions yet.</li>{% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  {% if top_key != 'video' %}
+    <div class="rec-section rec--video">
+      <h3>Recommended Videos</h3>
+      <ul>
+        {% for v in videos %}
+          <li><a href="{{ v.url }}" class="rec-item" data-item-type="video" data-item-id="{{ v.id }}">{{ v.title }}</a></li>
+        {% empty %}<li>No video suggestions yet.</li>{% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  {% if surprise_item %}
+    <div class="rec-section rec--surprise">
+      <h3>🎁 Surprise Pick</h3>
+      <a href="{{ surprise_item.url }}" class="rec-item"
+         data-item-type="{{ surprise_item.type }}" data-item-id="{{ surprise_item.id }}">
+        {{ surprise_item.title }}
+      </a>
+    </div>
+  {% endif %}
 
   <h3>Your Learner Profile:</h3>
   <ul>
-    <li>Gender: {{ profile.gender }}</li>
+    <li>Name: {{ user.get_full_name|default:user.username }}</li>
+    <li>Gender: {{ gender_label }}</li>  {# you already compute gender_label in the view #}
     <li>Region: {{ profile.region }}</li>
     <li>Highest Education: {{ profile.highest_education }}</li>
-    <li>IMD Band: {{ profile.imd_band }}</li>
     <li>Age Band: {{ profile.age_band }}</li>
     <li>Average Session Duration: {{ profile.avg_session_duration_min|floatformat:2 }} minutes</li>
   </ul>
 
-  <h3>Recommended Courses</h3>
-    <ul>
-    {% for course in courses %}
-    <li><a href="{{ course.url }}">{{ course.title }}</a></li>
-    {% empty %}
-    <li>No matching courses yet.</li>
-    {% endfor %}
-    </ul>
-
-    <h3>Recommended Books</h3>
-    <ul>
-    {% for book in books %}
-    <li><a href="{{ book.info_link }}">{{ book.title }}</a></li>
-    {% empty %}
-    <li>No matching books yet.</li>
-    {% endfor %}
-    </ul>
-
-    <h3>Recommended Videos</h3>
-    <ul>
-    {% for video in videos %}
-    <li><a href="{{ video.url }}">{{ video.title }}</a></li>
-    {% empty %}
-    <li>No matching videos yet.</li>
-    {% endfor %}
-    </ul>
-
-  <p><a href="{% url 'logout' %}">Logout</a></p>
+  <script>
+  (function(){
+    function getCsrf(){ const m=document.cookie.match(/csrftoken=([^;]+)/); return m?m[1]:''; }
+    document.addEventListener('click', function(e){
+      const a = e.target.closest('a.rec-item'); if (!a) return;
+      fetch("{% url 'track_interaction' %}", {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-CSRFToken':getCsrf()},
+        body:JSON.stringify({ item_type:a.dataset.itemType, item_id:a.dataset.itemId, event:'click' }),
+        keepalive:true
+      }).catch(()=>{});
+    }, true);
+  })();
+  </script>
 {% endblock %}

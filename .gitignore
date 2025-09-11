@@ -18,7 +18,8 @@ data/external/
 data/interim/
 data/processed/
 
-# Outputs
+# outputs
+
 outputs/
 
 # VSCode settings
