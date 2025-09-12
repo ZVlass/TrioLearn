@@ -1,4 +1,3 @@
-# apps/recommender/engine.py
 import os
 from pathlib import Path
 from functools import lru_cache
@@ -8,13 +7,13 @@ import pandas as pd
 from django.conf import settings
 from sentence_transformers import SentenceTransformer
 
-from apps.recommender.tri_modal_recommender import recommend_tri_modal_ml
+# FIX: use backend.apps instead of apps
+from backend.apps.recommender.tri_modal_recommender import recommend_tri_modal_ml
 
 
 def _p(env_key: str, default_rel: str) -> Path:
     """Env override, else BASE_DIR / default_rel"""
     return Path(os.getenv(env_key, Path(settings.BASE_DIR) / default_rel))
-
 
 
 @lru_cache(maxsize=1)
@@ -23,19 +22,18 @@ def _load_data():
 
     books_csv   = _p("BOOKS_CSV",   "data/interim/books_metadata.csv")
     courses_csv = _p("COURSES_CSV", "data/interim/courses_metadata.csv")
-    videos_csv  = _p("VIDEOS_CSV",  "data/interim/ml_videos_metadata.csv")
+    videos_csv  = _p("VIDEOS_CSV",  "data/interim/videos_metadata.csv")
 
     book_embs_npy   = _p("BOOK_EMBS_NPY",   "data/embeddings/book_embeddings.npy")
     course_embs_npy = _p("COURSE_EMBS_NPY", "data/embeddings/course_embeddings.npy")
     video_embs_npy  = _p("VIDEO_EMBS_NPY",  "data/embeddings/ml_videos_embeddings.npy")
 
-    missing = [p for p in [books_csv, courses_csv, videos_csv, book_embs_npy, course_embs_npy, video_embs_npy] if not p.exists()]
+    missing = [p for p in [books_csv, courses_csv, videos_csv,
+                           book_embs_npy, course_embs_npy, video_embs_npy]
+               if not p.exists()]
     if missing:
-        # Friendly message; keeps Django startup alive until someone actually calls get_recommendations()
         raise FileNotFoundError(
-            "Missing data files:\n  " + "\n  ".join(str(m) for m in missing) +
-            "\nSet env vars (BOOKS_CSV, COURSES_CSV, VIDEOS_CSV, BOOK_EMBS_NPY, COURSE_EMBS_NPY, VIDEO_EMBS_NPY) "
-            "or place files relative to BASE_DIR."
+            "Missing data files:\n  " + "\n  ".join(str(m) for m in missing)
         )
 
     books_df   = pd.read_csv(books_csv)
@@ -62,12 +60,9 @@ def _get_model():
     return SentenceTransformer(model_name)
 
 
-# ---------- public API ----------
 def get_recommendations(query: str, learner_level: str = "intermediate", top_k: int = 3):
-    # lazy-load everything on first call
     data = _load_data()
-    _ = _get_model()  # currently not used directly here, but loaded lazily and ready if needed elsewhere
-
+    _ = _get_model()
     return recommend_tri_modal_ml(
         query=query,
         books_df=data["books_df"],   book_embs=data["book_embs"],

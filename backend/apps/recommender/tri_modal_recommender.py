@@ -1,7 +1,8 @@
 import numpy as np
 from sentence_transformers import SentenceTransformer
-from apps.recommender.similarity_search import get_top_k
-from apps.recommender.ml_selector import predict_best_modality
+from backend.apps.recommender.similarity_search import get_top_k
+from backend.apps.recommender.ml_selector import predict_best_modality
+
 
 # Load your embedding model
 model = SentenceTransformer("all-MiniLM-L6-v2")
