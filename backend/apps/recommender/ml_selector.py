@@ -1,35 +1,85 @@
-import pickle
+
 import os
+import pickle
+import joblib
+import numpy as np
 import pandas as pd
-from apps.recommender.feature_extraction import extract_features
+from apps.recommender.feature_extraction import extract_features  # returns the schema you trained on
 
-
-#  Get path to the model
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "../../../outputs/models/xgb_best_media_type_model.pkl")
 
+MODEL_PATH = os.path.abspath(os.getenv(
+    "XGB_MODEL_PATH",
+    os.path.join(BASE_DIR, "../../../outputs/models/xgb_best_model.pkl")
+))
+ENC_PATH = os.path.abspath(os.getenv(
+    "XGB_LABEL_ENCODER_PATH",
+    os.path.join(BASE_DIR, "../../../outputs/models/label_encoder.pkl")
+))
 
-# Load the model once
-with open(os.path.abspath(MODEL_PATH), "rb") as f:
+# Load model (can be bare XGBClassifier or an sklearn/imb-learn Pipeline)
+with open(MODEL_PATH, "rb") as f:
     xgb_model = pickle.load(f)
 
-def predict_best_modality(query, learner_level="intermediate"):
+# Optional: LabelEncoder (only used for mapping if model.classes_ are numeric)
+label_encoder = None
+if os.path.exists(ENC_PATH):
+    try:
+        label_encoder = joblib.load(ENC_PATH)
+    except Exception:
+        label_encoder = None
+
+def _normalize_to_class_index(raw_pred):
     """
-    Predicts the best content type (video, book, course) using a trained XGBoost classifier.
-
-    Args:
-        query (str): User's search or topic query
-        learner_level (str): 'beginner', 'intermediate', 'advanced'
-
-    Returns:
-        str: One of ['video', 'book', 'course']
+    Accepts many shapes:
+      - scalar int/str             -> return int or str
+      - 1D array of length 1      -> class id
+      - 1D vector probs/one-hot   -> argmax
+      - 2D (1, n_classes) probs   -> argmax
     """
-    features = extract_features(query, learner_level)
-    df_feat = pd.DataFrame([features])
-    # Map integer class → string label
-    label_map = {0: "video", 1: "book", 2: "course"}
-    pred = xgb_model.predict(df_feat)[0]
-    return label_map[int(pred)]
+    arr = np.asarray(raw_pred)
+    # Model might return already-decoded string label
+    if arr.ndim == 0:
+        val = arr.item()
+        try:
+            return int(val)
+        except Exception:
+            return str(val)
+    if arr.ndim == 1:
+        if arr.size == 1:
+            val = arr[0]
+            try:
+                return int(val)
+            except Exception:
+                return str(val)
+        # vector -> argmax
+        return int(np.argmax(arr))
+    if arr.ndim == 2:
+        # e.g., (1, n_classes)
+        return int(np.argmax(arr[0]))
+    # Fallback: return string representation
+    return str(arr)
 
-    #pred = xgb_model.predict(df_feat)[0]
-    #return pred
+def _label_from_pred(pred_class_id: int) -> str:
+    # Prefer model.classes_ if they’re strings
+    classes = getattr(xgb_model, "classes_", None)
+    if classes is not None and any(isinstance(c, str) for c in classes):
+        return str(classes[int(pred_class_id)])
+    # Else try LabelEncoder
+    if label_encoder is not None and getattr(label_encoder, "classes_", None) is not None:
+        le_classes = list(label_encoder.classes_)
+        if any(isinstance(c, str) for c in le_classes):
+            return str(le_classes[int(pred_class_id)])
+    # Final fallback (adjust if your order differs)
+    return {0: "video", 1: "book", 2: "course"}.get(int(pred_class_id), "course")
+
+def predict_best_modality(query: str, learner_level: str = "intermediate") -> str:
+    feats = extract_features(query, learner_level)  # {'course_count','reading_count','video_count'}
+    X = pd.DataFrame([feats])
+    raw_pred = xgb_model.predict(X)
+    cls_or_label = _normalize_to_class_index(raw_pred)
+    # If the model already returned a string label, pass it through
+    if isinstance(cls_or_label, str) and not cls_or_label.isdigit():
+        return cls_or_label
+    # Otherwise map the integer class id to a string
+    return _label_from_pred(int(cls_or_label))
