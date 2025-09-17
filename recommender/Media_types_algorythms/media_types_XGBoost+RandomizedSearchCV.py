@@ -98,7 +98,7 @@ os.makedirs(output_dir, exist_ok=True)
 
 # Save paths
 model_path = os.path.join(output_dir, "xgb_best_media_type_model.pkl")
-encoder_path = os.path.join(output_dir, "label_encoder.pkl")
+encoder_path = os.path.join(output_dir, "label_enc oder.pkl")
 
 # Save artifacts
 joblib.dump(best_model, model_path)

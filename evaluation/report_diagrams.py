@@ -23,20 +23,31 @@ def add_arrow(ax, xy_from, xy_to, text=None):
 # 1) Architecture Diagram
 fig, ax = plt.subplots(figsize=(9,5))
 ax.set_xlim(0, 10); ax.set_ylim(0, 6); ax.axis('off')
+# Layers
 add_box(ax, (0.5, 4.6), 9, 1.0, "Application Layer\n(Django REST API, Web UI)", fc="#e8f0fe")
-add_box(ax, (0.5, 3.1), 9, 1.0, "Recommendation Engine\n(Embedding retrieval, Topic rerank, Tri‑modal bundling, Surprise)", fc="#e6f4ea")
+add_box(ax, (0.5, 3.0), 9, 1.4, "Recommendation Engine\n(Embedding retrieval, Topic rerank, Tri-modal bundling, Surprise)", fc="#e6f4ea")
 add_box(ax, (0.5, 1.6), 9, 1.0, "Data Processing\n(Cleaning, Normalization, SBERT, LDA Topics)", fc="#fff4e5")
 add_box(ax, (0.5, 0.1), 9, 1.0, "Data Ingestion & Storage\n(Coursera/edX, Google Books, YouTube, OULAD → CSV/Parquet, PostgreSQL)", fc="#fde7e9")
-add_box(ax, (1.0, 3.25), 2.2, 0.7, "Vector Store\n(Embeddings .npy/\nFAISS index)")
-add_box(ax, (3.4, 3.25), 2.2, 0.7, "Topic Store\n(LDA θ per item,\nTop words)")
-add_box(ax, (5.8, 3.25), 2.2, 0.7, "Rules & Signals\n(Difficulty, Popularity,\nFilters)")
-add_box(ax, (8.2, 3.25), 1.0, 0.7, "Bundles")
-add_arrow(ax, (5.0, 5.1), (5.0, 4.1), "API calls")
-add_arrow(ax, (5.0, 4.1), (5.0, 2.6), "Ranking")
-add_arrow(ax, (5.0, 2.6), (5.0, 1.1), "Features")
-add_arrow(ax, (5.0, 1.1), (5.0, 0.6), "ETL")
+
+# Expand Recommendation Engine box
+add_box(ax, (0.5, 2.4), 9, 2.2, 
+        "Recommendation Engine", 
+        fc="#e6f4ea")
+
+# Service boxes inside (2x2 layout)
+add_box(ax, (1.0, 3.9), 2.5, 0.7, "Vector Store\n(Embeddings .npy/\nFAISS index)")
+add_box(ax, (4.0, 3.9), 2.5, 0.7, "Topic Store\n(LDA θ per item,\nTop words)")
+
+add_box(ax, (1.0, 3.0), 2.5, 0.7, "Rules & Signals\n(Difficulty, Popularity,\nFilters)")
+add_box(ax, (4.0, 3.0), 2.5, 0.7, "Bundles\n(Tri-modal assembly)")
+
+# Arrows (shifted left to avoid text overlap)
+add_arrow(ax, (1.0, 5.1), (1.0, 4.4), "API calls")
+add_arrow(ax, (1.0, 4.4), (1.0, 2.9), "Ranking")
+add_arrow(ax, (1.0, 2.9), (1.0, 1.1), "Features")
+add_arrow(ax, (1.0, 1.1), (1.0, 0.6), "ETL")
 plt.tight_layout()
-arch_path = "/reports/images/TrioLearn_Architecture.png"
+arch_path = "evaluation/images/TrioLearn_Architecture.png"
 plt.savefig(arch_path)
 plt.close(fig)
 
@@ -57,7 +68,7 @@ add_arrow(ax, (2.0, 4.8), (2.8, 3.5), "to SBERT")
 add_arrow(ax, (7.0, 4.8), (6.8, 3.5), "to LDA")
 add_arrow(ax, (8.4, 3.0), (9.2, 3.0))
 plt.tight_layout()
-pipeline_path = "/report/images/TrioLearn_DataPipeline.png"
+pipeline_path = "evaluation/images/TrioLearn_DataPipeline.png"
 plt.savefig(pipeline_path)
 plt.close(fig)
 
@@ -80,7 +91,7 @@ add_arrow(ax, (10.4, 2.7), (10.8, 2.7))
 add_box(ax, (8.2, 0.4), 2.2, 0.8, "Surprise Selector\nrelevance × novelty")
 add_arrow(ax, (9.3, 1.2), (11.0, 2.0))
 plt.tight_layout()
-trimodal_path = "/reports/images/TrioLearn_TriModalFlow.png"
+trimodal_path = "evaluation/images/TrioLearn_TriModalFlow.png"
 plt.savefig(trimodal_path)
 plt.close(fig)
 
@@ -103,7 +114,7 @@ add_arrow(ax, (6.6, 5.1), (7.2, 3.6))
 add_arrow(ax, (6.6, 3.6), (7.2, 3.6))
 add_arrow(ax, (6.6, 2.1), (7.2, 2.6))
 plt.tight_layout()
-eval_path = "/report/images/TrioLearn_EvaluationFlow.png"
+eval_path = "evaluation/images/TrioLearn_EvaluationFlow.png"
 plt.savefig(eval_path)
 plt.close(fig)
 

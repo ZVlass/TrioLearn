@@ -1,11 +1,19 @@
 import numpy as np
+import pandas as pd
 from sentence_transformers import SentenceTransformer
-from backend.apps.recommender.similarity_search import get_top_k
-from backend.apps.recommender.ml_selector import predict_best_modality
+
+try:
+    from apps.recommender.similarity_search import get_top_k
+    from apps.recommender.ml_selector import predict_best_modality
+except ModuleNotFoundError:
+    # if we run evaluation
+    from backend.apps.recommender.similarity_search import get_top_k
+    from backend.apps.recommender.ml_selector import predict_best_modality
 
 
 # Load your embedding model
 model = SentenceTransformer("all-MiniLM-L6-v2")
+
 
 def recommend_tri_modal_ml(
     query,
@@ -56,13 +64,19 @@ def recommend_tri_modal_ml(
         "videos": top_videos
     }
 
+    support_frames = [df for k, df in results.items() if k != best_key and df is not None and not df.empty]
+    surprise_item = None
+    if support_frames:
+        pool = pd.concat([df.head(min(25, len(df))) for df in support_frames], ignore_index=True)
+        surprise_item = pool.sample(1, random_state=42).to_dict(orient="records")[0]
+
+
     print("best_type predicted by model:", best_type)
     print("Available keys in results:", list(results.keys()))
 
     return {
-        "best_type": best_type,
-        "top": results[best_key],
-        "supporting": {
-            k: v for k, v in results.items() if k != best_key
-        }
-    }
+    "best_type": best_type,
+    "top": results[best_key],
+    "supporting": {k: v for k, v in results.items() if k != best_key},
+    "surprise": surprise_item,  
+}

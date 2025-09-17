@@ -15,7 +15,7 @@ def clean(s: str) -> str:
     return re.sub(r"\s+", " ", s)
 
 def main():
-    # Load the .env nearest to the repo tree and override any stale OS env
+    # Load the .env nearest to the repo tree
     env_path = Path(find_dotenv(usecwd=True))
     if not env_path:
         raise RuntimeError("No .env found. Place it next to manage.py.")
@@ -54,7 +54,7 @@ def main():
     if "id" not in df.columns:
         df["id"] = np.arange(len(df))
 
-    # Likely text columns in book metadata
+    # text columns in book metadata
     text_cols_pref = [
         "title", "subtitle", "authors", "author", "description",
         "categories", "category", "tags", "publisher"

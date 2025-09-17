@@ -22,6 +22,6 @@ def recommend_query(request):
         "best_type": results["best_type"],
         "top": safe_df(results["top"]),
         "supporting": {
-            k: safe_df(v) for k, v in results["supporting"].items()
-        }
+            k: safe_df(v) for k, v in results["supporting"].items()},
+        "surprise": results.get("surprise")
     })

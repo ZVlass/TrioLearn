@@ -7,8 +7,12 @@ import pandas as pd
 from django.conf import settings
 from sentence_transformers import SentenceTransformer
 
-# FIX: use backend.apps instead of apps
-from backend.apps.recommender.tri_modal_recommender import recommend_tri_modal_ml
+# use backend.apps instead of apps
+try:
+    from apps.recommender.tri_modal_recommender import recommend_tri_modal_ml
+except ModuleNotFoundError:
+    # fallback if we run evaluation from TRIOLEARN main project root
+    from backend.apps.recommender.tri_modal_recommender import recommend_tri_modal_ml
 
 
 def _p(env_key: str, default_rel: str) -> Path:
@@ -24,9 +28,9 @@ def _load_data():
     courses_csv = _p("COURSES_CSV", "data/interim/courses_metadata.csv")
     videos_csv  = _p("VIDEOS_CSV",  "data/interim/videos_metadata.csv")
 
-    book_embs_npy   = _p("BOOK_EMBS_NPY",   "data/embeddings/book_embeddings.npy")
-    course_embs_npy = _p("COURSE_EMBS_NPY", "data/embeddings/course_embeddings.npy")
-    video_embs_npy  = _p("VIDEO_EMBS_NPY",  "data/embeddings/ml_videos_embeddings.npy")
+    book_embs_npy   = _p("BOOK_EMBS_NPY",   "data/embeddings/books_embeddings.npy")
+    course_embs_npy = _p("COURSE_EMBS_NPY", "data/embeddings/courses_embeddings.npy")
+    video_embs_npy  = _p("VIDEO_EMBS_NPY",  "data/embeddings/videos_embeddings.npy")
 
     missing = [p for p in [books_csv, courses_csv, videos_csv,
                            book_embs_npy, course_embs_npy, video_embs_npy]

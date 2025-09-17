@@ -3,7 +3,6 @@
 {% block content %}
   <h2>Welcome, {{ user.get_full_name|default:user.username }}!</h2>
 
-
   <!-- Prediction emphasis banner -->
   <div style="padding:.75rem 1rem; margin:.5rem 0 1rem; border:1px solid #ddd; border-radius:.5rem;">
     {% if profile.preferred_format == 'none' or not profile.preferred_format %}
@@ -46,22 +45,34 @@
     <p class="muted" style="margin:.25rem 0 1rem;">Showing results for: <strong>{{ focus_label }}</strong></p>
   {% endif %}
 
-  {# ---- MAIN MODALITY FIRST (emphasised) ---- #}
-  {% if top_key == 'course' %}
+  {# ================== PRIMARY MODALITY (from best_type) ================== #}
+  {% if best_type == 'course' %}
     <div class="rec-section rec--course primary">
       <h3>Recommended Courses</h3>
       <ul>
-        {% for c in courses %}
-          <li><a href="{{ c.url }}" class="rec-item" data-item-type="course" data-item-id="{{ c.id }}">{{ c.title }}</a></li>
+        {% for c in top %}
+          <li>
+            <a href="{{ c.url|default:'#' }}" class="rec-item"
+               data-item-type="course" data-item-id="{{ c.id|default:'' }}">
+              {{ c.title }}
+            </a>
+            {% if c.platform or c.provider %}<span class="muted"> — {{ c.platform|default:c.provider }}</span>{% endif %}
+          </li>
         {% empty %}<li>No course suggestions yet.</li>{% endfor %}
       </ul>
     </div>
-  {% elif top_key == 'reading' %}
-    <div class="rec-section rec--reading primary">
+  {% elif best_type == 'book' %}
+    <div class="rec-section rec--book primary">
       <h3>Recommended Books</h3>
       <ul>
-        {% for b in books %}
-          <li><a href="{{ b.info_link }}" class="rec-item" data-item-type="book" data-item-id="{{ b.id }}">{{ b.title }} by {{ b.authors }}</a></li>
+        {% for b in top %}
+          <li>
+            <a href="{{ b.url|default:'#' }}" class="rec-item"
+               data-item-type="book" data-item-id="{{ b.id|default:'' }}">
+              {{ b.title }}
+            </a>
+            {% if b.platform or b.provider %}<span class="muted"> — {{ b.platform|default:b.provider }}</span>{% endif %}
+          </li>
         {% empty %}<li>No book suggestions yet.</li>{% endfor %}
       </ul>
     </div>
@@ -69,61 +80,90 @@
     <div class="rec-section rec--video primary">
       <h3>Recommended Videos</h3>
       <ul>
-        {% for v in videos %}
-          <li><a href="{{ v.url }}" class="rec-item" data-item-type="video" data-item-id="{{ v.id }}">{{ v.title }}</a></li>
+        {% for v in top %}
+          <li>
+            <a href="{{ v.url|default:'#' }}" class="rec-item"
+               data-item-type="video" data-item-id="{{ v.id|default:'' }}">
+              {{ v.title }}
+            </a>
+            {% if v.platform or v.provider %}<span class="muted"> — {{ v.platform|default:v.provider }}</span>{% endif %}
+          </li>
         {% empty %}<li>No video suggestions yet.</li>{% endfor %}
       </ul>
     </div>
   {% endif %}
 
-  {# ---- THEN THE OTHER TWO MODALITIES (standard frames) ---- #}
-  {% if top_key != 'course' %}
+  {# ================== SUPPORTING MODALITIES ================== #}
+  {% if best_type != 'course' %}
     <div class="rec-section rec--course">
       <h3>Recommended Courses</h3>
       <ul>
-        {% for c in courses %}
-          <li><a href="{{ c.url }}" class="rec-item" data-item-type="course" data-item-id="{{ c.id }}">{{ c.title }}</a></li>
+        {% for c in supporting.courses %}
+          <li>
+            <a href="{{ c.url|default:'#' }}" class="rec-item"
+               data-item-type="course" data-item-id="{{ c.id|default:'' }}">
+              {{ c.title }}
+            </a>
+            {% if c.platform or c.provider %}<span class="muted"> — {{ c.platform|default:c.provider }}</span>{% endif %}
+          </li>
         {% empty %}<li>No course suggestions yet.</li>{% endfor %}
       </ul>
     </div>
   {% endif %}
 
-  {% if top_key != 'reading' %}
-    <div class="rec-section rec--reading">
+  {% if best_type != 'book' %}
+    <div class="rec-section rec--book">
       <h3>Recommended Books</h3>
       <ul>
-        {% for b in books %}
-          <li><a href="{{ b.info_link }}" class="rec-item" data-item-type="book" data-item-id="{{ b.id }}">{{ b.title }} by {{ b.authors }}</a></li>
+        {% for b in supporting.books %}
+          <li>
+            <a href="{{ b.url|default:'#' }}" class="rec-item"
+               data-item-type="book" data-item-id="{{ b.id|default:'' }}">
+              {{ b.title }}
+            </a>
+            {% if b.platform or b.provider %}<span class="muted"> — {{ b.platform|default:b.provider }}</span>{% endif %}
+          </li>
         {% empty %}<li>No book suggestions yet.</li>{% endfor %}
       </ul>
     </div>
   {% endif %}
 
-  {% if top_key != 'video' %}
+  {% if best_type != 'video' %}
     <div class="rec-section rec--video">
       <h3>Recommended Videos</h3>
       <ul>
-        {% for v in videos %}
-          <li><a href="{{ v.url }}" class="rec-item" data-item-type="video" data-item-id="{{ v.id }}">{{ v.title }}</a></li>
+        {% for v in supporting.videos %}
+          <li>
+            <a href="{{ v.url|default:'#' }}" class="rec-item"
+               data-item-type="video" data-item-id="{{ v.id|default:'' }}">
+              {{ v.title }}
+            </a>
+            {% if v.platform or v.provider %}<span class="muted"> — {{ v.platform|default:v.provider }}</span>{% endif %}
+          </li>
         {% empty %}<li>No video suggestions yet.</li>{% endfor %}
       </ul>
     </div>
   {% endif %}
 
-  {% if surprise_item %}
+  {# ================== SURPRISE ================== #}
+  {% if surprise %}
     <div class="rec-section rec--surprise">
       <h3>🎁 Surprise Pick</h3>
-      <a href="{{ surprise_item.url }}" class="rec-item"
-         data-item-type="{{ surprise_item.type }}" data-item-id="{{ surprise_item.id }}">
-        {{ surprise_item.title }}
+      <a href="{{ surprise.url|default:'#' }}" class="rec-item"
+         data-item-type="{{ surprise.modality|default:'unknown' }}"
+         data-item-id="{{ surprise.id|default:'' }}">
+        {{ surprise.title }}
       </a>
+      {% if surprise.platform or surprise.provider %}
+        <span class="muted"> — {{ surprise.platform|default:surprise.provider }}</span>
+      {% endif %}
     </div>
   {% endif %}
 
   <h3>Your Learner Profile:</h3>
   <ul>
     <li>Name: {{ user.get_full_name|default:user.username }}</li>
-    <li>Gender: {{ gender_label }}</li>  {# you already compute gender_label in the view #}
+    <li>Gender: {{ gender_label }}</li>
     <li>Region: {{ profile.region }}</li>
     <li>Highest Education: {{ profile.highest_education }}</li>
     <li>Age Band: {{ profile.age_band }}</li>
@@ -138,7 +178,11 @@
       fetch("{% url 'track_interaction' %}", {
         method:'POST',
         headers:{'Content-Type':'application/json','X-CSRFToken':getCsrf()},
-        body:JSON.stringify({ item_type:a.dataset.itemType, item_id:a.dataset.itemId, event:'click' }),
+        body:JSON.stringify({
+          item_type:a.dataset.itemType || 'unknown',
+          item_id:a.dataset.itemId || '',
+          event:'click'
+        }),
         keepalive:true
       }).catch(()=>{});
     }, true);

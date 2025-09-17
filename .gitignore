@@ -18,14 +18,12 @@ data/external/
 data/interim/
 data/processed/
 
-# outputs
-
-outputs/
 
 # VSCode settings
 .vscode/
 
 # OS files
 .DS_Store
-/outputs/
-/outputs/
+
+backend/.env
+.env

@@ -4,18 +4,21 @@ import pickle
 import joblib
 import numpy as np
 import pandas as pd
-from apps.recommender.feature_extraction import extract_features  # returns the schema you trained on
+from pathlib import Path
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+from django.conf import settings
+from apps.recommender.feature_extraction import extract_features  # returns the schema we trained on
 
-MODEL_PATH = os.path.abspath(os.getenv(
+BASE_DIR = Path(settings.BASE_DIR)
+
+MODEL_PATH = os.getenv(
     "XGB_MODEL_PATH",
-    os.path.join(BASE_DIR, "../../../outputs/models/xgb_best_model.pkl")
-))
-ENC_PATH = os.path.abspath(os.getenv(
+    str(BASE_DIR / "outputs" / "models" / "xgb_best_model.pkl")
+)
+ENC_PATH = os.getenv(
     "XGB_LABEL_ENCODER_PATH",
-    os.path.join(BASE_DIR, "../../../outputs/models/label_encoder.pkl")
-))
+    str(BASE_DIR / "outputs" / "models" / "label_encoder.pkl")
+)
 
 # Load model (can be bare XGBClassifier or an sklearn/imb-learn Pipeline)
 with open(MODEL_PATH, "rb") as f:
