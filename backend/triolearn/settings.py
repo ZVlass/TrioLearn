@@ -14,6 +14,8 @@ from pathlib import Path
 
 import os
 import environ
+from dotenv import load_dotenv
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -31,8 +33,14 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 # Initialise environment variables
-env = environ.Env()
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+# Primary config (wins over OS env too)
+load_dotenv(BASE_DIR / ".env", override=True)
+
+# Optional machine-local overrides (gitignored)
+load_dotenv(BASE_DIR / ".env.local", override=True)
+
+# Defaults only, never override anything already set
+load_dotenv(BASE_DIR / ".env.example", override=False)
 
 # Application definition
 

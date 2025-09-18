@@ -9,24 +9,38 @@ from pathlib import Path
 from django.conf import settings
 from apps.recommender.feature_extraction import extract_features  # returns the schema we trained on
 
-BASE_DIR = Path(settings.BASE_DIR)
+from pathlib import Path
+try:
+    from django.conf import settings
+    BASE_ROOT = Path(settings.BASE_DIR)  # points to backend/
+except Exception:
+    # fallback if imported outside Django
+    BASE_ROOT = Path(__file__).resolve().parents[3]  # .../backend
 
-MODEL_PATH = os.getenv(
-    "XGB_MODEL_PATH",
-    str(BASE_DIR / "outputs" / "models" / "xgb_best_model.pkl")
-)
-ENC_PATH = os.getenv(
-    "XGB_LABEL_ENCODER_PATH",
-    str(BASE_DIR / "outputs" / "models" / "label_encoder.pkl")
-)
+from apps.recommender.feature_extraction import extract_features  # returns the schema you trained on
 
-# Load model (can be bare XGBClassifier or an sklearn/imb-learn Pipeline)
+def _as_abs(p: str | os.PathLike) -> Path:
+    """Return absolute path; if p is relative, resolve from BASE_ROOT."""
+    p = Path(p)
+    return p if p.is_absolute() else (BASE_ROOT / p)
+
+# --- Resolve model paths: env override, else sensible defaults relative to backend/
+MODEL_PATH = _as_abs(os.getenv("MODEL_PATH", "backend/outputs/models/xgb_best_model.pkl"))
+ENC_PATH   = _as_abs(os.getenv("ENC_PATH", "backend/outputs/models/label_encoder.pkl"))
+
+# Optional: quick sanity log (won't crash)
+if not MODEL_PATH.exists():
+    print(f"[ml_selector] WARNING: model file not found at {MODEL_PATH}")
+if not ENC_PATH.exists():
+    print(f"[ml_selector] INFO: label encoder not found at {ENC_PATH}; continuing without it.")
+
+# Load model
 with open(MODEL_PATH, "rb") as f:
     xgb_model = pickle.load(f)
 
-# Optional: LabelEncoder (only used for mapping if model.classes_ are numeric)
+# LabelEncoder
 label_encoder = None
-if os.path.exists(ENC_PATH):
+if ENC_PATH.exists():
     try:
         label_encoder = joblib.load(ENC_PATH)
     except Exception:

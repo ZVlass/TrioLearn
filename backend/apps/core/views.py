@@ -6,7 +6,9 @@ from django.contrib.auth.models import User
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from .forms import UserRegistrationForm, TopicSelectionForm  
-from apps.recommender.utils import recommend_for_profile
+from apps.recommender.engine import get_recommendations
+
+
 from apps.core.constants import TOPIC_LABELS
 
 
@@ -113,54 +115,172 @@ def logout_user(request):
     messages.success(request, "You have successfully logged out.")
     return redirect('login')  # Redirect to login page after logout
 
+# ---------- helpers ----------
+
+def _as_item_dict(obj):
+    """
+    Normalize a recommendation into the dict shape the template expects.
+    Works for either model instances (Course/Book/Video) or pre-made dicts.
+    """
+    # If engine already returns dicts, try to map gracefuly
+    if isinstance(obj, dict):
+        href = obj.get("href") or obj.get("url") or obj.get("info_link") or "#"
+        title = obj.get("display_title") or obj.get("title") or "Untitled"
+        disp_id = obj.get("display_id") or obj.get("external_id") or obj.get("id") or ""
+        return {
+            "href": href,
+            "display_title": title,
+            "display_id": disp_id,
+            "platform": obj.get("platform"),
+            "provider": obj.get("provider"),
+        }
+
+    # Otherwise, convert our ORM objects
+    if isinstance(obj, Course):
+        return {
+            "href": getattr(obj, "url", "#"),
+            "display_title": getattr(obj, "title", "Untitled course"),
+            "display_id": getattr(obj, "external_id", getattr(obj, "id", "")),
+            "platform": getattr(obj, "platform", None),
+            "provider": getattr(obj, "provider", None),
+        }
+    if isinstance(obj, Book):
+        return {
+            "href": getattr(obj, "info_link", "#"),
+            "display_title": getattr(obj, "title", "Untitled book"),
+            "display_id": getattr(obj, "external_id", getattr(obj, "id", "")),
+            "platform": getattr(obj, "platform", None),
+            "provider": getattr(obj, "provider", None),
+        }
+    if isinstance(obj, Video):
+        return {
+            "href": getattr(obj, "url", "#"),
+            "display_title": getattr(obj, "title", "Untitled video"),
+            "display_id": getattr(obj, "external_id", getattr(obj, "id", "")),
+            "platform": getattr(obj, "platform", None),
+            "provider": getattr(obj, "provider", None),
+        }
+    # Fallback
+    return {"href": "#", "display_title": str(obj)[:80], "display_id": ""}
+
+def _two(xs):
+    return list(xs or [])[:2]
+
+def _plural_best_type(top_key):
+    """Map old single-key style to new plural used by the template."""
+    m = {"course": "courses", "reading": "books", "video": "videos"}
+    return m.get((top_key or "").lower(), "courses")
+
+# ---------- main view ----------
+
 @login_required
 def dashboard(request):
     profile = LearnerProfile.objects.get(user=request.user)
 
-    focus_topic = request.GET.get("topic") or None
+    # --- topics (show past choices & read current focus) ---
+    focus_topic = (request.GET.get("topic") or "").strip() or None
     if focus_topic and profile.topic_interests and focus_topic not in profile.topic_interests:
+        # Ignore invalid topic code
         focus_topic = None
 
     topic_display = [(c, TOPIC_LABELS.get(c, c)) for c in (profile.topic_interests or [])]
     focus_label = TOPIC_LABELS.get(focus_topic) if focus_topic else None
 
-    recs = recommend_for_profile(profile, k=12, explore_eps=0.3, focus_topic=focus_topic)
-    top_key, top_label = profile.top_format_key_and_label()
+    # --- call your engine: get_recommendations ---
+    # Adjust signature if yours differs. Common patterns:
+    #   get_recommendations(user=profile.user, topic=focus_topic, k=12)
+    #   get_recommendations(profile, focus_topic=..., k=12)
+    #   get_recommendations(query=?, level=?, ...)
+    recs = get_recommendations(
+        user=profile.user,
+        topic=focus_topic,   # None means "all topics"
+        k=12,                # we’ll cut to 2 in the UI
+    )
 
-    FORMAT_LABELS = {"video": "Videos", "course": "Courses", "reading": "Books & Articles", "none": "No preference"}
+    # Expect keys like 'courses'/'books'/'videos' (lists) and optional 'best_type' or 'top_key'
+    courses_raw = recs.get("courses", [])
+    books_raw   = recs.get("books", [])
+    videos_raw  = recs.get("videos", [])
+
+    # If your engine returns a best type, use it; otherwise fall back to profile’s top key
+    best_type = recs.get("best_type")
+    if not best_type:
+        # Some older paths use 'top_key' as 'course'|'reading'|'video'
+        top_key = recs.get("top_key")
+        if not top_key and hasattr(profile, "top_format_key_and_label"):
+            top_key, _ = profile.top_format_key_and_label()
+        best_type = _plural_best_type(top_key)
+
+    # Normalize items and **limit to 2** per modality
+    formatted = {
+        "courses": _two([_as_item_dict(x) for x in courses_raw]),
+        "books":   _two([_as_item_dict(x) for x in books_raw]),
+        "videos":  _two([_as_item_dict(x) for x in videos_raw]),
+    }
+
+    top = formatted.get(best_type, [])
+    supporting = {
+        "courses": formatted["courses"] if best_type != "courses" else [],
+        "books":   formatted["books"]   if best_type != "books"   else [],
+        "videos":  formatted["videos"]  if best_type != "videos"  else [],
+    }
+
+    # Surprise pick (optional)
+    s_obj = recs.get("surprise")
+    surprise = _as_item_dict(s_obj) if s_obj else None
+    if surprise and "modality" not in surprise:
+        # try to infer a modality tag for analytics (optional)
+        surprise["modality"] = (
+            "course" if surprise in formatted["courses"]
+            else "book" if surprise in formatted["books"]
+            else "video" if surprise in formatted["videos"]
+            else recs.get("surprise_modality", "unknown")
+        )
+    # Optional reason
+    if surprise and "surprise_reason" not in surprise:
+        surprise["surprise_reason"] = recs.get("surprise_reason")
+
+    # Banner labels (unchanged from your previous view)
+    FORMAT_LABELS = {
+        "video": "Videos",
+        "course": "Courses",
+        "reading": "Books & Articles",
+        "none": "No preference",
+    }
     preferred_format_label = FORMAT_LABELS.get((profile.preferred_format or "none"))
 
-    # Full gender label for display (handles both codes and full strings)
-    GENDER_LABELS = {"M": "Male", "F": "Female", "O": "Other", "Male": "Male", "Female": "Female", "Other": "Other"}
+    # If you want to show what the model currently thinks is best:
+    if hasattr(profile, "top_format_key_and_label"):
+        _, top_format_label = profile.top_format_key_and_label()
+    else:
+        # derive a friendly label from best_type
+        best_label_map = {"courses": "Courses", "books": "Books & Articles", "videos": "Videos"}
+        top_format_label = best_label_map.get(best_type, "Courses")
+
+    # Gender label (unchanged)
+    GENDER_LABELS = {"M": "Male", "F": "Female", "O": "Other",
+                     "Male": "Male", "Female": "Female", "Other": "Other"}
     gender_label = GENDER_LABELS.get(profile.gender, profile.gender or "")
 
-    def to_item(obj):
-        if isinstance(obj, Course):
-            return {"type": "course", "id": obj.id, "title": obj.title, "url": obj.url}
-        if isinstance(obj, Book):
-            return {"type": "book", "id": obj.id, "title": obj.title, "url": obj.info_link}
-        if isinstance(obj, Video):
-            return {"type": "video", "id": obj.id, "title": obj.title, "url": obj.url}
-        return None
-
-    explore_items = [x for x in (to_item(y) for y in (recs.get("explore") or [])) if x]
-    surprise_obj = recs.get("surprise")
-    surprise_item = to_item(surprise_obj) if surprise_obj else None
-
     return render(request, "core/dashboard.html", {
+        # profile + user info
         "profile": profile,
         "gender_label": gender_label,
+
+        # topics (badges + dropdown)
         "topic_display": topic_display,
         "focus_topic": focus_topic,
         "focus_label": focus_label,
-        "top_key": top_key,
-        "top_format_label": top_label,
+
+        # banner labels
         "preferred_format_label": preferred_format_label,
-        "courses": recs["courses"],
-        "books": recs["books"],
-        "videos": recs["videos"],
-        "explore_items": explore_items,
-        "surprise_item": surprise_item,
+        "top_format_label": top_format_label,
+
+        # expected by the **new template**
+        "best_type": best_type,   # 'courses' | 'books' | 'videos'
+        "top": top,               # list of dicts (≤2)
+        "supporting": supporting, # dict of lists (≤2 each)
+        "surprise": surprise,     # dict or None
     })
 
 
