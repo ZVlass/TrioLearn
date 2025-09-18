@@ -20,7 +20,13 @@
   {% if topic_display %}
     <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin:.25rem 0 1rem;">
       {% for code, label in topic_display %}
-        <span class="badge">{{ label }}</span>
+        {% if focus_topic == code %}
+          <span class="badge" style="background:#007bff;color:#fff;">{{ label }}</span>
+        {% else %}
+          <a href="?topic={{ code }}" class="badge" style="border:1px solid #007bff;color:#007bff;">
+            {{ label }}
+          </a>
+        {% endif %}
       {% endfor %}
     </div>
 
@@ -45,18 +51,16 @@
     <p class="muted" style="margin:.25rem 0 1rem;">Showing results for: <strong>{{ focus_label }}</strong></p>
   {% endif %}
 
-  {# ================== PRIMARY MODALITY (from best_type) ================== #}
+  {# ================== PRIMARY MODALITY ================== #}
   {% if best_type == 'courses' %}
     <div class="rec-section rec--course primary">
       <h3>Recommended Courses</h3>
       <ul>
         {% for c in top|slice:":2" %}
           <li>
-            <a href="{{ c.href }}" class="rec-item"
-               data-item-type="course" data-item-id="{{ c.display_id }}">
-              {{ c.display_title }}
+            <a href="{{ c.url|default:'#' }}" class="rec-item" data-item-type="course" data-item-id="{{ c.id }}">
+              {{ c.title }}
             </a>
-            {% if c.platform or c.provider %}<span class="muted"> — {{ c.platform|default:c.provider }}</span>{% endif %}
           </li>
         {% empty %}<li>No course suggestions yet.</li>{% endfor %}
       </ul>
@@ -67,11 +71,9 @@
       <ul>
         {% for b in top|slice:":2" %}
           <li>
-            <a href="{{ b.href }}" class="rec-item"
-               data-item-type="book" data-item-id="{{ b.display_id }}">
-              {{ b.display_title }}
+            <a href="{{ b.info_link|default:'#' }}" class="rec-item" data-item-type="book" data-item-id="{{ b.id }}">
+              {{ b.title }}
             </a>
-            {% if b.platform or b.provider %}<span class="muted"> — {{ b.platform|default:b.provider }}</span>{% endif %}
           </li>
         {% empty %}<li>No book suggestions yet.</li>{% endfor %}
       </ul>
@@ -82,29 +84,25 @@
       <ul>
         {% for v in top|slice:":2" %}
           <li>
-            <a href="{{ v.href }}" class="rec-item"
-               data-item-type="video" data-item-id="{{ v.display_id }}">
-              {{ v.display_title }}
+            <a href="{{ v.url|default:'#' }}" class="rec-item" data-item-type="video" data-item-id="{{ v.id }}">
+              {{ v.title }}
             </a>
-            {% if v.platform or v.provider %}<span class="muted"> — {{ v.platform|default:v.provider }}</span>{% endif %}
           </li>
         {% empty %}<li>No video suggestions yet.</li>{% endfor %}
       </ul>
     </div>
   {% endif %}
 
-  {# ================== SUPPORTING MODALITIES (2 each) ================== #}
+  {# ================== SUPPORTING MODALITIES ================== #}
   {% if best_type != 'courses' %}
     <div class="rec-section rec--course">
       <h3>Recommended Courses</h3>
       <ul>
         {% for c in supporting.courses|slice:":2" %}
           <li>
-            <a href="{{ c.href }}" class="rec-item"
-               data-item-type="course" data-item-id="{{ c.display_id }}">
-              {{ c.display_title }}
+            <a href="{{ c.url|default:'#' }}" class="rec-item" data-item-type="course" data-item-id="{{ c.id }}">
+              {{ c.title }}
             </a>
-            {% if c.platform or c.provider %}<span class="muted"> — {{ c.platform|default:c.provider }}</span>{% endif %}
           </li>
         {% empty %}<li>No course suggestions yet.</li>{% endfor %}
       </ul>
@@ -117,11 +115,9 @@
       <ul>
         {% for b in supporting.books|slice:":2" %}
           <li>
-            <a href="{{ b.href }}" class="rec-item"
-               data-item-type="book" data-item-id="{{ b.display_id }}">
-              {{ b.display_title }}
+            <a href="{{ b.info_link|default:'#' }}" class="rec-item" data-item-type="book" data-item-id="{{ b.id }}">
+              {{ b.title }}
             </a>
-            {% if b.platform or b.provider %}<span class="muted"> — {{ b.platform|default:b.provider }}</span>{% endif %}
           </li>
         {% empty %}<li>No book suggestions yet.</li>{% endfor %}
       </ul>
@@ -134,11 +130,9 @@
       <ul>
         {% for v in supporting.videos|slice:":2" %}
           <li>
-            <a href="{{ v.href }}" class="rec-item"
-               data-item-type="video" data-item-id="{{ v.display_id }}">
-              {{ v.display_title }}
+            <a href="{{ v.url|default:'#' }}" class="rec-item" data-item-type="video" data-item-id="{{ v.id }}">
+              {{ v.title }}
             </a>
-            {% if v.platform or v.provider %}<span class="muted"> — {{ v.platform|default:v.provider }}</span>{% endif %}
           </li>
         {% empty %}<li>No video suggestions yet.</li>{% endfor %}
       </ul>
@@ -149,19 +143,25 @@
   {% if surprise %}
     <div class="rec-section rec--surprise">
       <h3>🎁 Surprise Pick</h3>
-      <a href="{{ surprise.href }}" class="rec-item"
-         data-item-type="{{ surprise.modality|default:'unknown' }}"
-         data-item-id="{{ surprise.display_id }}">
-        {{ surprise.display_title }}
-      </a>
-      {% if surprise.platform or surprise.provider %}
-        <span class="muted"> — {{ surprise.platform|default:surprise.provider }}</span>
-      {% endif %}
-      {% if surprise.surprise_reason %}
-        <div class="muted" style="margin-top:.25rem;">{{ surprise.surprise_reason }}</div>
+      {% if surprise_type == "course" %}
+        <a href="{{ surprise.url|default:'#' }}" class="rec-item"
+          data-item-type="course" data-item-id="{{ surprise.id }}">
+          {{ surprise.title }}
+        </a>
+      {% elif surprise_type == "book" %}
+        <a href="{{ surprise.info_link|default:'#' }}" class="rec-item"
+          data-item-type="book" data-item-id="{{ surprise.id }}">
+          {{ surprise.title }}
+        </a>
+      {% elif surprise_type == "video" %}
+        <a href="{{ surprise.url|default:'#' }}" class="rec-item"
+          data-item-type="video" data-item-id="{{ surprise.id }}">
+          {{ surprise.title }}
+        </a>
       {% endif %}
     </div>
   {% endif %}
+
 
   <h3>Your Learner Profile:</h3>
   <ul>
