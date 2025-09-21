@@ -81,7 +81,10 @@ def recommend_tri_modal_ml(
     "surprise": surprise_item,  
 }
 
-# ==== TRIOMODAL DEBUG UTILITIES (safe to keep; no runtime side-effects) ====
+
+#=======================================================================================================
+# ================ TRIOMODAL DEBUG UTILITIES (safe to keep; no runtime side-effects) ===================
+
 import os, json, traceback
 from pathlib import Path
 

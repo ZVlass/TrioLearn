@@ -56,7 +56,7 @@
     <div class="rec-section rec--course primary">
       <h3>Recommended Courses</h3>
       <ul>
-        {% for c in top|slice:":2" %}
+        {% for c in top|slice:":5" %}
           <li>
             <a href="{{ c.url|default:'#' }}" class="rec-item" data-item-type="course" data-item-id="{{ c.id }}">
               {{ c.title }}
@@ -69,7 +69,7 @@
     <div class="rec-section rec--book primary">
       <h3>Recommended Books</h3>
       <ul>
-        {% for b in top|slice:":2" %}
+        {% for b in top|slice:":5" %}
           <li>
             <a href="{{ b.info_link|default:'#' }}" class="rec-item" data-item-type="book" data-item-id="{{ b.id }}">
               {{ b.title }}
@@ -82,7 +82,7 @@
     <div class="rec-section rec--video primary">
       <h3>Recommended Videos</h3>
       <ul>
-        {% for v in top|slice:":2" %}
+        {% for v in top|slice:":5" %}
           <li>
             <a href="{{ v.url|default:'#' }}" class="rec-item" data-item-type="video" data-item-id="{{ v.id }}">
               {{ v.title }}
@@ -98,7 +98,7 @@
     <div class="rec-section rec--course">
       <h3>Recommended Courses</h3>
       <ul>
-        {% for c in supporting.courses|slice:":2" %}
+        {% for c in supporting.courses|slice:":5" %}
           <li>
             <a href="{{ c.url|default:'#' }}" class="rec-item" data-item-type="course" data-item-id="{{ c.id }}">
               {{ c.title }}
@@ -113,7 +113,7 @@
     <div class="rec-section rec--book">
       <h3>Recommended Books</h3>
       <ul>
-        {% for b in supporting.books|slice:":2" %}
+        {% for b in supporting.books|slice:":5" %}
           <li>
             <a href="{{ b.info_link|default:'#' }}" class="rec-item" data-item-type="book" data-item-id="{{ b.id }}">
               {{ b.title }}
@@ -128,7 +128,7 @@
     <div class="rec-section rec--video">
       <h3>Recommended Videos</h3>
       <ul>
-        {% for v in supporting.videos|slice:":2" %}
+        {% for v in supporting.videos|slice:":5" %}
           <li>
             <a href="{{ v.url|default:'#' }}" class="rec-item" data-item-type="video" data-item-id="{{ v.id }}">
               {{ v.title }}
@@ -142,7 +142,7 @@
   {# ================== SURPRISE ================== #}
   {% if surprise %}
     <div class="rec-section rec--surprise">
-      <h3>🎁 Surprise Pick</h3>
+      <h3> Surprise Pick</h3>
       {% if surprise_type == "course" %}
         <a href="{{ surprise.url|default:'#' }}" class="rec-item"
           data-item-type="course" data-item-id="{{ surprise.id }}">

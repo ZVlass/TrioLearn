@@ -2,6 +2,7 @@
 # PowerShell script to scaffold TrioLearn project (simplified)
 # ------------------------------------------
 # 1. Set your base project directory here:
+
 $base = "C:\Users\jvlas\source\repos\TrioLearn"
 
 # 2. List of subfolders relative to $base

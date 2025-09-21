@@ -6,7 +6,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-
 oulad_df = pd.read_csv('./data/processed/oulad_media_profiles_refined_balanced.csv')
 
 # Select proportion features for clustering

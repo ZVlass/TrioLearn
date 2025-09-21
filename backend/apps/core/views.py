@@ -115,7 +115,7 @@ def login_user(request):
 def logout_user(request):
     logout(request)
     messages.success(request, "You have successfully logged out.")
-    return redirect('login')
+    return redirect('')
 
 
 # -------------------------
@@ -160,41 +160,58 @@ def landing(request):
 def dashboard(request):
     profile = LearnerProfile.objects.get(user=request.user)
 
-    # Optional search query (future use)
+    # Optional free-text query and focus topic
     q = (request.GET.get("q") or "").strip() or None
-
-    # Focus topic: must belong to user
     focus_topic = (request.GET.get("topic") or "").strip() or None
     if focus_topic and profile.topic_interests and focus_topic not in (profile.topic_interests or []):
         focus_topic = None
 
-    # Topic chips for UI
+    # Topic chips + label for UI
     topic_display = [(c, TOPIC_LABELS.get(c, c)) for c in (profile.topic_interests or [])]
     focus_label = TOPIC_LABELS.get(focus_topic) if focus_topic else None
 
-    # Call recommender (safe: query → recommend_query, else get_recommendations fallback)
-    recs = {}
+    # Engine fetch size (keep larger so we have leftovers)
     try:
-        if q:
-            recs = recommend_query(q, k=12)
-        else:
-            try:
-                recs = get_recommendations(user=profile.user, topic=focus_topic, k=12)
-            except Exception:
-                recs = recommend_for_profile(profile, k=12, explore_eps=0.3, focus_topic=focus_topic)
-    except Exception:
-        recs = recommend_for_profile(profile, k=12, explore_eps=0.3, focus_topic=focus_topic)
+        top_k = int(request.GET.get("top_k", 12))
+    except (TypeError, ValueError):
+        top_k = 12
 
-    # Collect recommendations
-    courses = list(recs.get("courses", []))[:2]
-    books   = list(recs.get("books", []))[:2]
-    videos  = list(recs.get("videos", []))[:2]
+    # Items to DISPLAY per box
+    try:
+        per_box = int(request.GET.get("per_box", 5))
+    except (TypeError, ValueError):
+        per_box = 5
 
-    # Determine best group
+    # Pick the query for the engine: priority q → focus label → default
+    if q:
+        query = q
+    elif focus_topic:
+        query = focus_label or focus_topic
+    else:
+        query = "machine learning"
+
+    # Level heuristic
+    level = (profile.highest_education or "").strip().lower() or "intermediate"
+
+    # === Vector engine ===
+    # Returns dict with keys: "books", "courses", "videos", "best_type", "surprise"
+    recs = get_recommendations(query=query, level=level, top_k=top_k)
+
+    # Full lists from engine
+    courses_all = list(recs.get("courses", []))
+    books_all   = list(recs.get("books", []))
+    videos_all  = list(recs.get("videos", []))
+
+    # Determine primary modality (fallback to largest list)
     best_type = recs.get("best_type")
     if not best_type:
-        sizes = {"courses": len(courses), "books": len(books), "videos": len(videos)}
+        sizes = {"courses": len(courses_all), "books": len(books_all), "videos": len(videos_all)}
         best_type = max(sizes, key=sizes.get) if any(sizes.values()) else "courses"
+
+    # Slice what we SHOW (per_box)
+    courses = courses_all[:per_box]
+    books   = books_all[:per_box]
+    videos  = videos_all[:per_box]
 
     top = {"courses": courses, "books": books, "videos": videos}.get(best_type, [])
     supporting = {
@@ -203,20 +220,68 @@ def dashboard(request):
         "videos": videos if best_type != "videos" else [],
     }
 
-    surprise = recs.get("surprise")
+    # Build leftovers (not displayed) to choose a genuine surprise from
+    leftovers = {
+        "courses": courses_all[per_box:],
+        "books":   books_all[per_box:],
+        "videos":  videos_all[per_box:],
+    }
+
+    # Surprise: prefer a non-primary modality with the largest leftover pool
+    non_primary = [m for m in ("courses", "books", "videos") if m != best_type]
+    non_primary.sort(key=lambda m: len(leftovers[m]), reverse=True)
+
+    surprise = None
+    for m in non_primary:
+        if leftovers[m]:
+            surprise = leftovers[m][0]     # deterministic; or use random.choice(leftovers[m])
+            break
+    if surprise is None and leftovers[best_type]:
+        surprise = leftovers[best_type][0]
+
+    # Normalize surprise for template compatibility
+    def _norm_surprise(s):
+        # Engine returns dicts; keep fallback if model instance ever appears
+        if not isinstance(s, dict):
+            return s
+        s = dict(s)
+        s.setdefault("url", s.get("href") or s.get("info_link") or "#")
+        s.setdefault("title", s.get("display_title") or s.get("title") or "Untitled")
+        s.setdefault("id", s.get("display_id") or s.get("id") or "")
+        return s
+
+    surprise = _norm_surprise(surprise)
+
+    # Derive surprise_type (used by your template’s old/new surprise blocks)
     surprise_type = None
-    if surprise:
-        if isinstance(surprise, Course):
-            surprise_type = "course"
-        elif isinstance(surprise, Book):
-            surprise_type = "book"
-        elif isinstance(surprise, Video):
-            surprise_type = "video"
+    if isinstance(surprise, dict):
+        mod = (surprise.get("modality") or "").lower()
+        if mod in ("course", "courses"): surprise_type = "course"
+        elif mod in ("book", "books"):   surprise_type = "book"
+        elif mod in ("video", "videos"): surprise_type = "video"
+    elif surprise:
+        if isinstance(surprise, Course): surprise_type = "course"
+        elif isinstance(surprise, Book): surprise_type = "book"
+        elif isinstance(surprise, Video): surprise_type = "video"
 
+    # Debug log
+    print(
+        "[recs] (engine)",
+        "query=", query,
+        f"shown(c/b/v)={[len(courses), len(books), len(videos)]}",
+        f"leftovers(c/b/v)={[len(leftovers['courses']), len(leftovers['books']), len(leftovers['videos'])]}",
+        "surprise_mod=", (surprise.get('modality') if isinstance(surprise, dict) else type(surprise).__name__),
+    )
 
-    # Labels
-    FORMAT_LABELS = {"video": "Videos", "course": "Courses", "reading": "Books & Articles", "none": "No preference"}
+    # Banner labels
+    FORMAT_LABELS = {
+        "video": "Videos",
+        "course": "Courses",
+        "reading": "Books & Articles",
+        "none": "No preference",
+    }
     preferred_format_label = FORMAT_LABELS.get((profile.preferred_format or "none"))
+
     if hasattr(profile, "top_format_key_and_label"):
         _, top_format_label = profile.top_format_key_and_label()
     else:
@@ -240,4 +305,3 @@ def dashboard(request):
         "surprise_type": surprise_type,
         "q": q,
     })
-

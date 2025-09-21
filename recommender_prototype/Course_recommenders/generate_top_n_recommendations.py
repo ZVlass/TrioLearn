@@ -1,4 +1,3 @@
-# load_model_and_generate_recommendations.py
 
 import pickle
 import pandas as pd

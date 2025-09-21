@@ -8,7 +8,7 @@ def recommend_query(request):
     query = request.query_params.get("query", "").strip()
     level = request.query_params.get("level")
     try:
-        top_k = int(request.query_params.get("top_k", 3))
+        top_k = int(request.query_params.get("top_k", 12))
     except (TypeError, ValueError):
         top_k = 3
 
